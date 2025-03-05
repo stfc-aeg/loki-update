@@ -66,84 +66,83 @@ class LokiUpdateController():
             raise LokiUpdateError(e)
     
     def get_emmc_installed_image(self):
-        error = False
-        error_message = ""
         output = subprocess.run(["loki-update.sh", "--info", "alljson", "--target", "emmc"], capture_output=True, text=True)
         
-        if output.returncode != 0:
-            error = True
-            error_message = output.stderr
+        error_occurerd, error_message = self.get_error_info(output)
+        emmc_image = {}
         
-        emmc_image = ast.literal_eval(output.stdout.strip())
+        if not error_occurerd:
+            emmc_image = ast.literal_eval(output.stdout.strip())
         
         return {
-            "image_name": emmc_image["app-name"],
-            "image_version": emmc_image["app-version"],
-            "loki_version": emmc_image["loki-version"],
-            "platform": emmc_image["platform"],
-            "error": error,
+            "app_name": emmc_image.get("app-name", None),
+            "app_version": emmc_image.get("app-version", None),
+            "loki_version": emmc_image.get("loki-version", None),
+            "platform": emmc_image.get("platform", None),
+            "error_occurerd": error_occurerd,
             "error_message": error_message
         }
 
-    def get_sd_installed_image(self):
-        error = False
-        error_message = ""
-        
+    def get_sd_installed_image(self):        
         output = subprocess.run(["loki-update.sh", "--info", "alljson", "--target", "sd"], capture_output=True, text=True)
         
-        if output.returncode != 0:
-            error = True
-            error_message = output.stderr
+        error_occurerd, error_message = self.get_error_info(output)
+        sd_image = {}
         
-        sd_image = ast.literal_eval(output.stdout.strip())
+        if not error_occurerd:
+            sd_image = ast.literal_eval(output.stdout.strip())
         
         return {
-            "image_name": sd_image["app-name"],
-            "image_version": sd_image["app-version"],
-            "loki_version": sd_image["loki-version"],
-            "platform": sd_image["platform"],
-            "error": error,
+            "app_name": sd_image.get("app-name", None),
+            "app_version": sd_image.get("app-version", None),
+            "loki_version": sd_image.get("loki-version", None),
+            "platform": sd_image.get("platform", None),
+            "error_occurerd": error_occurerd,
             "error_message": error_message
         }
     
-    def get_backup_installed_image(self):
-        error = False
-        error_message = ""
-        
+    def get_backup_installed_image(self):     
         output = subprocess.run(["loki-update.sh", "--info", "alljson", "--target", "backup"], capture_output=True, text=True)
         
-        if output.returncode != 0:
-            error = True
-            error_message = output.stderr
+        error_occurerd, error_message = self.get_error_info(output)
+        backup_image = {}
         
-        backup_image = ast.literal_eval(output.stdout.strip())
+        if not error_occurerd:
+            backup_image = ast.literal_eval(output.stdout.strip())
         
         return {
-            "image_name": backup_image["app-name"],
-            "image_version": backup_image["app-version"],
-            "loki_version": backup_image["loki-version"],
-            "platform": backup_image["platform"],
-            "error": error,
+            "app_name": backup_image.get("app-name", None),
+            "app_version": backup_image.get("app-version", None),
+            "loki_version": backup_image.get("loki-version", None),
+            "platform": backup_image.get("platform", None),
+            "error_occurerd": error_occurerd,
             "error_message": error_message
         }
     
     def get_flash_installed_image(self):
-        error = False
-        error_message = ""
+        output = subprocess.run(["sudo", "loki-update.sh", "--target", "flash", "--info", "alljson"], capture_output=True, text=True)
         
-        output = subprocess.run(["sudo", "loki-update.sh", "--info", "alljson", "--target", "flash"], capture_output=True, text=True)
+        error_occurerd, error_message = self.get_error_info(output)
+        flash_image = {}
         
-        if output.returncode != 0:
-            error = True
-            error_message = output.stderr
-        
-        flash_image = ast.literal_eval(output.stdout.strip())
+        if not error_occurerd:
+            flash_image = ast.literal_eval(output.stdout.strip())
         
         return {
-            "image_name": flash_image["app-name"],
-            "image_version": flash_image["app-version"],
-            "loki_version": flash_image["loki-version"],
-            "platform": flash_image["platform"],
-            "error": error,
+            "app_name": flash_image.get("app-name", None),
+            "app_version": flash_image.get("app-version", None),
+            "loki_version": flash_image.get("loki-version", None),
+            "platform": flash_image.get("platform", None),
+            "error_occurerd": error_occurerd,
             "error_message": error_message
         }
+        
+    def get_error_info(self, output):
+        error_occurerd = False
+        error_message = None
+        
+        if output.returncode != 0:
+            error_occurerd = True
+            error_message = output.stderr.strip()
+        
+        return error_occurerd, error_message
