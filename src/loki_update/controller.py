@@ -128,7 +128,7 @@ class LokiUpdateController():
             "app_version": sd_image.get("app-version", None),
             "loki_version": sd_image.get("loki-version", None),
             "platform": sd_image.get("platform", None),
-            "time": time.time(),
+            "time": sd_image.get("time", None),
             "error_occurerd": error_occurerd,
             "error_message": error_message
         }
@@ -147,7 +147,7 @@ class LokiUpdateController():
             "app_version": backup_image.get("app-version", None),
             "loki_version": backup_image.get("loki-version", None),
             "platform": backup_image.get("platform", None),
-            "time": time.time(),
+            "time": backup_image.get("time", None),
             "error_occurerd": error_occurerd,
             "error_message": error_message
         }
