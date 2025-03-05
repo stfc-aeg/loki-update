@@ -25,7 +25,8 @@ class LokiUpdateController():
             "emmc": (self.get_emmc_installed_image, None),
             "sd": (self.get_sd_installed_image, None),
             "backup": (self.get_backup_installed_image, None),
-            "flash": (self.get_flash_installed_image, None)
+            "flash": (self.get_flash_installed_image, None),
+            "runtime": (self.get_runtime_installed_image, None)
         })
         
         self.param_tree = ParameterTree({
@@ -133,6 +134,24 @@ class LokiUpdateController():
             "app_version": flash_image.get("app-version", None),
             "loki_version": flash_image.get("loki-version", None),
             "platform": flash_image.get("platform", None),
+            "error_occurerd": error_occurerd,
+            "error_message": error_message
+        }
+        
+    def get_runtime_installed_image(self):
+        output = subprocess.run(["loki-update.sh", "--info", "alljson", "--target", "runtime"], capture_output=True, text=True)
+        
+        error_occurerd, error_message = self.get_error_info(output)
+        runtime_image = {}
+        
+        if not error_occurerd:
+            runtime_image = ast.literal_eval(output.stdout.strip())
+        
+        return {
+            "app_name": runtime_image.get("app-name", None),
+            "app_version": runtime_image.get("app-version", None),
+            "loki_version": runtime_image.get("loki-version", None),
+            "platform": runtime_image.get("platform", None),
             "error_occurerd": error_occurerd,
             "error_message": error_message
         }
