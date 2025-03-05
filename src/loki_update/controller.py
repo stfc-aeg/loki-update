@@ -20,6 +20,13 @@ class LokiUpdateController():
         # Store initialisation time
         self.init_time = time.time()
         
+        self.refresh_all_image_info = False
+        self.refresh_emmc_image_info = False
+        self.refresh_sd_image_info = False
+        self.refresh_backup_image_info = False
+        self.refresh_flash_image_info = False
+        self.refresh_runtime_image_info = False
+        
         # Store inital image info
         self.emmc_installed_image = self.get_emmc_installed_image()
         self.sd_installed_image = self.get_sd_installed_image()
@@ -27,23 +34,35 @@ class LokiUpdateController():
         self.flash_installed_image = self.get_flash_installed_image()
         self.runtime_installed_image = self.get_runtime_installed_image()
         
-        self.refresh_image_info = False
-        
         self.installed_images_tree = ParameterTree({
-            "emmc": (lambda: self.emmc_installed_image, None),
-            "sd": (lambda: self.sd_installed_image, None),
-            "backup": (lambda: self.backup_installed_image, None),
-            "flash": (lambda: self.flash_installed_image, None),
-            "runtime": (lambda: self.runtime_installed_image, None)
+            "emmc": {
+                "info": (lambda: self.emmc_installed_image, None),
+                "refresh": (self.get_refresh_emmc_image_info, self.set_refresh_emmc_image_info)
+                },
+            "sd": {
+                "info": (lambda: self.sd_installed_image, None),
+                "refresh": (self.get_refresh_sd_image_info, self.set_refresh_sd_image_info)
+                },
+            "backup": {
+                "info": (lambda: self.backup_installed_image, None),
+                "refresh": (self.get_refresh_backup_image_info, self.set_refresh_backup_image_info)
+                },
+            "flash": {
+                "info": (lambda: self.flash_installed_image, None),
+                "refresh": (self.get_refresh_flash_image_info, self.set_refresh_flash_image_info)
+                },
+            "runtime": {
+                "info": (lambda: self.runtime_installed_image, None),
+                "refresh": (self.get_refresh_runtime_image_info, self.set_refresh_runtime_image_info)
+                },
+            "refresh_all_image_info": (self.get_refresh_all_image_info, self.set_refresh_all_image_info)
         })
         
         self.param_tree = ParameterTree({
             "loki_update_version": __version__,
             "server_uptime": (self.get_server_uptime, None),
-            "installed_images": self.installed_images_tree,
-            "refresh_image_info": (self.get_refresh_image_info, self.set_refresh_image_info)
+            "installed_images": self.installed_images_tree
         })
-        
     
     def get_server_uptime(self):
         """Get the uptime for the ODIN server.
@@ -83,7 +102,7 @@ class LokiUpdateController():
         
         if not error_occurerd:
             emmc_image = ast.literal_eval(output.stdout.strip())
-        
+            
         return {
             "app_name": emmc_image.get("app-name", None),
             "app_version": emmc_image.get("app-version", None),
@@ -91,7 +110,8 @@ class LokiUpdateController():
             "platform": emmc_image.get("platform", None),
             "time": emmc_image.get("time", None),
             "error_occurerd": error_occurerd,
-            "error_message": error_message
+            "error_message": error_message,
+            
         }
 
     def get_sd_installed_image(self):        
@@ -108,7 +128,7 @@ class LokiUpdateController():
             "app_version": sd_image.get("app-version", None),
             "loki_version": sd_image.get("loki-version", None),
             "platform": sd_image.get("platform", None),
-            "time": sd_image.get("time", None),
+            "time": time.time(),
             "error_occurerd": error_occurerd,
             "error_message": error_message
         }
@@ -127,7 +147,7 @@ class LokiUpdateController():
             "app_version": backup_image.get("app-version", None),
             "loki_version": backup_image.get("loki-version", None),
             "platform": backup_image.get("platform", None),
-            "time": backup_image.get("time", None),
+            "time": time.time(),
             "error_occurerd": error_occurerd,
             "error_message": error_message
         }
@@ -146,7 +166,7 @@ class LokiUpdateController():
             "app_version": flash_image.get("app-version", None),
             "loki_version": flash_image.get("loki-version", None),
             "platform": flash_image.get("platform", None),
-            "time": time.time(),
+            "time": flash_image.get("time", None),
             "error_occurerd": error_occurerd,
             "error_message": error_message
         }
@@ -180,16 +200,66 @@ class LokiUpdateController():
         
         return error_occurerd, error_message
     
-    def get_refresh_image_info(self):
-        return self.refresh_image_info
+    def get_refresh_all_image_info(self):
+        return self.refresh_all_image_info
     
-    def set_refresh_image_info(self, refresh):
-        self.refresh_image_info = bool(refresh)
+    def set_refresh_all_image_info(self, refresh):
+        self.refresh_all_image_info = bool(refresh)
         
-        if self.refresh_image_info:
+        if self.refresh_all_image_info:
             self.emmc_installed_image = self.get_emmc_installed_image()
             self.sd_installed_image = self.get_sd_installed_image()
             self.backup_installed_image = self.get_backup_installed_image()
             self.flash_installed_image = self.get_flash_installed_image()
             self.runtime_installed_image = self.get_runtime_installed_image()
-            self.refresh_image_info = False
+            self.refresh_image_all_info = False
+            
+    def get_refresh_emmc_image_info(self):
+        return self.refresh_emmc_image_info
+    
+    def set_refresh_emmc_image_info(self, refresh):
+        self.refresh_emmc_image_info = bool(refresh)
+        
+        if self.refresh_emmc_image_info:
+            self.emmc_installed_image = self.get_emmc_installed_image()
+            self.refresh_emmc_image_info = False
+    
+    def get_refresh_sd_image_info(self):
+        return self.refresh_sd_image_info
+    
+    def set_refresh_sd_image_info(self, refresh):
+        self.refresh_sd_image_info = bool(refresh)
+        
+        if self.refresh_sd_image_info:
+            self.sd_installed_image = self.get_sd_installed_image()
+            self.refresh_sd_image_info = False
+            
+    def get_refresh_backup_image_info(self):
+        return self.refresh_backup_image_info
+    
+    def set_refresh_backup_image_info(self, refresh):
+        self.refresh_backup_image_info = bool(refresh)
+        
+        if self.refresh_backup_image_info:
+            self.backup_installed_image = self.get_backup_installed_image()
+            self.refresh_backup_image_info = False
+            
+    def get_refresh_flash_image_info(self):
+        return self.refresh_flash_image_info
+    
+    def set_refresh_flash_image_info(self, refresh):
+        self.refresh_flash_image_info = bool(refresh)
+        
+        if self.refresh_flash_image_info:
+            self.flash_installed_image = self.get_flash_installed_image()
+            self.refresh_flash_image_info = False
+            
+    def get_refresh_runtime_image_info(self):
+        return self.refresh_runtime_image_info
+    
+    def set_refresh_runtime_image_info(self, refresh):
+        self.refresh_runtime_image_info = bool(refresh)
+        
+        if self.refresh_runtime_image_info:
+            self.runtime_installed_image = self.get_runtime_installed_image()
+            self.refresh_runtime_image_info = False
