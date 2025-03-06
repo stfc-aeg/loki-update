@@ -97,10 +97,10 @@ class LokiUpdateController():
     def get_emmc_installed_image(self):
         output = subprocess.run(["loki-update.sh", "--info", "alljson", "--target", "emmc"], capture_output=True, text=True)
         
-        error_occurerd, error_message = self.get_error_info(output)
+        error_occurred, error_message = self.get_error_info(output)
         emmc_image = {}
         
-        if not error_occurerd:
+        if not error_occurred:
             emmc_image = ast.literal_eval(output.stdout.strip())
             
         return {
@@ -109,7 +109,7 @@ class LokiUpdateController():
             "loki_version": emmc_image.get("loki-version", None),
             "platform": emmc_image.get("platform", None),
             "time": emmc_image.get("time", None),
-            "error_occurerd": error_occurerd,
+            "error_occurred": error_occurred,
             "error_message": error_message,
             
         }
@@ -117,10 +117,10 @@ class LokiUpdateController():
     def get_sd_installed_image(self):        
         output = subprocess.run(["loki-update.sh", "--target", "sd", "--info", "alljson"], capture_output=True, text=True)
         
-        error_occurerd, error_message = self.get_error_info(output)
+        error_occurred, error_message = self.get_error_info(output)
         sd_image = {}
         
-        if not error_occurerd:
+        if not error_occurred:
             sd_image = ast.literal_eval(output.stdout.strip())
         
         return {
@@ -129,17 +129,17 @@ class LokiUpdateController():
             "loki_version": sd_image.get("loki-version", None),
             "platform": sd_image.get("platform", None),
             "time": sd_image.get("time", None),
-            "error_occurerd": error_occurerd,
+            "error_occurred": error_occurred,
             "error_message": error_message
         }
     
     def get_backup_installed_image(self):     
         output = subprocess.run(["loki-update.sh", "--target", "backup", "--info", "alljson"], capture_output=True, text=True)
         
-        error_occurerd, error_message = self.get_error_info(output)
+        error_occurred, error_message = self.get_error_info(output)
         backup_image = {}
         
-        if not error_occurerd:
+        if not error_occurred:
             backup_image = ast.literal_eval(output.stdout.strip())
         
         return {
@@ -148,17 +148,17 @@ class LokiUpdateController():
             "loki_version": backup_image.get("loki-version", None),
             "platform": backup_image.get("platform", None),
             "time": backup_image.get("time", None),
-            "error_occurerd": error_occurerd,
+            "error_occurred": error_occurred,
             "error_message": error_message
         }
     
     def get_flash_installed_image(self):
         output = subprocess.run(["sudo", "loki-update.sh", "--target", "flash", "--info", "alljson"], capture_output=True, text=True)
         
-        error_occurerd, error_message = self.get_error_info(output)
+        error_occurred, error_message = self.get_error_info(output)
         flash_image = {}
         
-        if not error_occurerd:
+        if not error_occurred:
             flash_image = ast.literal_eval(output.stdout.strip())
         
         return {
@@ -167,17 +167,17 @@ class LokiUpdateController():
             "loki_version": flash_image.get("loki-version", None),
             "platform": flash_image.get("platform", None),
             "time": flash_image.get("time", None),
-            "error_occurerd": error_occurerd,
+            "error_occurred": error_occurred,
             "error_message": error_message
         }
         
     def get_runtime_installed_image(self):
         output = subprocess.run(["loki-update.sh", "--target", "runtime", "--info", "alljson"], capture_output=True, text=True)
         
-        error_occurerd, error_message = self.get_error_info(output)
+        error_occurred, error_message = self.get_error_info(output)
         runtime_image = {}
         
-        if not error_occurerd:
+        if not error_occurred:
             runtime_image = ast.literal_eval(output.stdout.strip())
         
         return {
@@ -186,19 +186,19 @@ class LokiUpdateController():
             "loki_version": runtime_image.get("loki-version", None),
             "platform": runtime_image.get("platform", None),
             "time": runtime_image.get("time", None),
-            "error_occurerd": error_occurerd,
+            "error_occurred": error_occurred,
             "error_message": error_message
         }
         
     def get_error_info(self, output):
-        error_occurerd = False
+        error_occurred = False
         error_message = None
         
         if output.returncode != 0:
-            error_occurerd = True
+            error_occurred = True
             error_message = output.stderr.strip()
         
-        return error_occurerd, error_message
+        return error_occurred, error_message
     
     def get_refresh_all_image_info(self):
         return self.refresh_all_image_info
