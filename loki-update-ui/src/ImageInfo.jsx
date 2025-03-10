@@ -4,22 +4,25 @@ import Button from "react-bootstrap/esm/Button";
 import Container from "react-bootstrap/esm/Container";
 import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
-
-const EndpointButton = WithEndpoint(Button);
+import moment from "moment";
 
 export default function ImageInfo() {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.158:8888"
+    "http://192.168.0.154:8888"
   );
 
-  console.log(endpoint.data?.installed_images?.flash?.info?.error_occurred);
+  const EndpointButton = WithEndpoint(Button);
 
   let installed_emmc_image = endpoint?.data?.installed_images?.emmc;
   let installed_sd_image = endpoint?.data?.installed_images?.sd;
   let installed_backup_image = endpoint?.data?.installed_images?.backup;
   let installed_flash_image = endpoint?.data?.installed_images?.flash;
   let installed_runtime_image = endpoint?.data?.installed_images?.runtime;
+
+  const getHumanTime = (refreshTime) => {
+    return moment.unix(refreshTime).format("DD/MM/YYYY HH:mm:ss");
+  };
 
   return (
     <div className={"installed-images-container"}>
@@ -36,6 +39,10 @@ export default function ImageInfo() {
               ) : (
                 <p>Error: {installed_emmc_image?.info?.error_message}</p>
               )}
+              <p>
+                Last Refresh:{" "}
+                {getHumanTime(installed_emmc_image?.info?.last_refresh)}
+              </p>
               <div>
                 <EndpointButton
                   endpoint={endpoint}
@@ -59,6 +66,10 @@ export default function ImageInfo() {
               ) : (
                 <p>Error: {installed_sd_image?.info?.error_message}</p>
               )}
+              <p>
+                Last Refresh:{" "}
+                {getHumanTime(installed_sd_image?.info?.last_refresh)}
+              </p>
               <div>
                 <EndpointButton
                   endpoint={endpoint}
@@ -86,6 +97,10 @@ export default function ImageInfo() {
               ) : (
                 <p>Error: {installed_backup_image.info?.error_message}</p>
               )}
+              <p>
+                Last Refresh:{" "}
+                {getHumanTime(installed_backup_image?.info?.last_refresh)}
+              </p>
               <div>
                 <EndpointButton
                   endpoint={endpoint}
@@ -109,6 +124,10 @@ export default function ImageInfo() {
               ) : (
                 <p>Error: {installed_flash_image?.info?.error_message}</p>
               )}
+              <p>
+                Last Refresh:{" "}
+                {getHumanTime(installed_flash_image?.info?.last_refresh)}
+              </p>
               <div>
                 <EndpointButton
                   endpoint={endpoint}
@@ -136,6 +155,10 @@ export default function ImageInfo() {
               ) : (
                 <p>Error: {installed_runtime_image?.info?.error_message}</p>
               )}
+              <p>
+                Last Refresh:{" "}
+                {getHumanTime(installed_runtime_image?.info?.last_refresh)}
+              </p>
               <div>
                 <EndpointButton
                   endpoint={endpoint}

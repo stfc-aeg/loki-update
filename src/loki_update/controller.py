@@ -111,6 +111,7 @@ class LokiUpdateController():
             "time": emmc_image.get("time", None),
             "error_occurred": error_occurred,
             "error_message": error_message,
+            "last_refresh": time.time()
             
         }
 
@@ -130,7 +131,8 @@ class LokiUpdateController():
             "platform": sd_image.get("platform", None),
             "time": sd_image.get("time", None),
             "error_occurred": error_occurred,
-            "error_message": error_message
+            "error_message": error_message,
+            "last_refresh": time.time()
         }
     
     def get_backup_installed_image(self):     
@@ -149,7 +151,8 @@ class LokiUpdateController():
             "platform": backup_image.get("platform", None),
             "time": backup_image.get("time", None),
             "error_occurred": error_occurred,
-            "error_message": error_message
+            "error_message": error_message,
+            "last_refresh": time.time()
         }
     
     def get_flash_installed_image(self):
@@ -168,7 +171,8 @@ class LokiUpdateController():
             "platform": flash_image.get("platform", None),
             "time": flash_image.get("time", None),
             "error_occurred": error_occurred,
-            "error_message": error_message
+            "error_message": error_message,
+            "last_refresh": time.time()
         }
         
     def get_runtime_installed_image(self):
@@ -187,7 +191,8 @@ class LokiUpdateController():
             "platform": runtime_image.get("platform", None),
             "time": runtime_image.get("time", None),
             "error_occurred": error_occurred,
-            "error_message": error_message
+            "error_message": error_message,
+            "last_refresh": time.time()
         }
         
     def get_error_info(self, output):
