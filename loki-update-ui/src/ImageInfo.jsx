@@ -38,7 +38,13 @@ export default function ImageInfo() {
     <div className={"installed-images-container"}>
       <Accordion defaultActiveKey={["0"]} alwaysOpen>
         <Accordion.Item eventKey="0">
-          <Accordion.Header>Primary Installation(s)</Accordion.Header>
+          <Accordion.Header>
+            {!checkIdenticalPrimaryImages ? (
+              <>Primary Installations</>
+            ) : (
+              <>Primary Installation</>
+            )}
+          </Accordion.Header>
           <Accordion.Body>
             <Container>
               <Row>
