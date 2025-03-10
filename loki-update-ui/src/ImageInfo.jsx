@@ -25,16 +25,25 @@ export default function ImageInfo() {
     return moment.unix(refreshTime).format("DD/MM/YYYY HH:mm:ss");
   };
 
+  const checkIdenticalPrimaryImages = () => {
+    return (
+      installed_emmc_image?.info?.app_name !==
+        installed_runtime_image?.info?.app_name &&
+      installed_emmc_image?.info?.app_version !==
+        installed_runtime_image?.info?.app_version
+    );
+  };
+
   return (
     <div className={"installed-images-container"}>
       <Accordion defaultActiveKey={["0"]} alwaysOpen>
         <Accordion.Item eventKey="0">
-          <Accordion.Header>Primary Installations</Accordion.Header>
+          <Accordion.Header>Primary Installation(s)</Accordion.Header>
           <Accordion.Body>
             <Container>
               <Row>
                 <Col>
-                  <TitleCard title="Installed Image in EMMC">
+                  <TitleCard title="Installed Image in eMMC">
                     {!installed_emmc_image?.info?.error_occurred ? (
                       <>
                         <p>
@@ -72,47 +81,51 @@ export default function ImageInfo() {
                     </div>
                   </TitleCard>
                 </Col>
-                <Col>
-                  <TitleCard title="Installed Image in Runtime">
-                    {!installed_runtime_image?.info?.error_occurred ? (
-                      <>
+                {!checkIdenticalPrimaryImages ? (
+                  <Col>
+                    <TitleCard title="Installed Image in Runtime">
+                      {!installed_runtime_image?.info?.error_occurred ? (
+                        <>
+                          <p>
+                            <strong>App Name:</strong>{" "}
+                            {installed_runtime_image?.info?.app_name}
+                          </p>
+                          <p>
+                            <strong>App Version:</strong>{" "}
+                            {installed_runtime_image?.info?.app_version}
+                          </p>
+                          <p>
+                            <strong>Platform:</strong>{" "}
+                            {installed_runtime_image?.info?.platform}
+                          </p>
+                        </>
+                      ) : (
                         <p>
-                          <strong>App Name:</strong>{" "}
-                          {installed_runtime_image?.info?.app_name}
+                          <strong>Error:</strong>{" "}
+                          {installed_runtime_image?.info?.error_message}
                         </p>
-                        <p>
-                          <strong>App Version:</strong>{" "}
-                          {installed_runtime_image?.info?.app_version}
-                        </p>
-                        <p>
-                          <strong>Platform:</strong>{" "}
-                          {installed_runtime_image?.info?.platform}
-                        </p>
-                      </>
-                    ) : (
-                      <p>
-                        <strong>Error:</strong>{" "}
-                        {installed_runtime_image?.info?.error_message}
-                      </p>
-                    )}
-                    <p>
-                      <strong>Last Refresh:</strong>{" "}
-                      {getHumanTime(
-                        installed_runtime_image?.info?.last_refresh
                       )}
-                    </p>
-                    <div>
-                      <EndpointButton
-                        endpoint={endpoint}
-                        event_type="click"
-                        fullpath="installed_images/runtime/refresh"
-                        value={true}
-                      >
-                        Refresh
-                      </EndpointButton>
-                    </div>
-                  </TitleCard>
-                </Col>
+                      <p>
+                        <strong>Last Refresh:</strong>{" "}
+                        {getHumanTime(
+                          installed_runtime_image?.info?.last_refresh
+                        )}
+                      </p>
+                      <div>
+                        <EndpointButton
+                          endpoint={endpoint}
+                          event_type="click"
+                          fullpath="installed_images/runtime/refresh"
+                          value={true}
+                        >
+                          Refresh
+                        </EndpointButton>
+                      </div>
+                    </TitleCard>
+                  </Col>
+                ) : (
+                  <></>
+                )}
               </Row>
             </Container>
           </Accordion.Body>
