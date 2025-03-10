@@ -27,13 +27,14 @@ export default function ImageInfo() {
         <Row>
           <Col>
             <TitleCard title="Installed Image in EMMC">
-              <p>App Name: {installed_emmc_image?.info?.app_name}</p>
-              <p>App Version: {installed_emmc_image?.info?.app_version}</p>
-              <p>Platform: {installed_emmc_image?.info?.platform}</p>
-              {installed_emmc_image?.info?.error_occurred ? (
-                <p>Error: {installed_emmc_image?.info?.error_message}</p>
+              {!installed_emmc_image?.info?.error_occurred ? (
+                <>
+                  <p>App Name: {installed_emmc_image?.info?.app_name}</p>
+                  <p>App Version: {installed_emmc_image?.info?.app_version}</p>
+                  <p>Platform: {installed_emmc_image?.info?.platform}</p>
+                </>
               ) : (
-                <></>
+                <p>Error: {installed_emmc_image?.info?.error_message}</p>
               )}
               <div>
                 <EndpointButton
@@ -49,13 +50,14 @@ export default function ImageInfo() {
           </Col>
           <Col>
             <TitleCard title="Installed Image in SD">
-              <p>App Name: {installed_sd_image?.info?.app_name}</p>
-              <p>App Version: {installed_sd_image?.info?.app_version}</p>
-              <p>Platform: {installed_sd_image?.info?.platform}</p>
-              {installed_sd_image?.info?.error_occurred ? (
-                <p>Error: {installed_sd_image?.info?.error_message}</p>
+              {!installed_sd_image?.info?.error_occurred ? (
+                <>
+                  <p>App Name: {installed_sd_image?.info?.app_name}</p>
+                  <p>App Version: {installed_sd_image?.info?.app_version}</p>
+                  <p>Platform: {installed_sd_image?.info?.platform}</p>
+                </>
               ) : (
-                <></>
+                <p>Error: {installed_sd_image?.info?.error_message}</p>
               )}
               <div>
                 <EndpointButton
@@ -73,13 +75,16 @@ export default function ImageInfo() {
         <Row>
           <Col>
             <TitleCard title="Installed Image in Backup">
-              <p>App Name: {installed_backup_image?.info?.app_name}</p>
-              <p>App Version: {installed_backup_image?.info?.app_version}</p>
-              <p>Platform: {installed_backup_image?.info?.platform}</p>
-              {installed_backup_image?.info?.error_occurred ? (
-                <p>Error: {installed_backup_image.info?.error_message}</p>
+              {!installed_backup_image?.info?.error_occurred ? (
+                <>
+                  <p>App Name: {installed_backup_image?.info?.app_name}</p>
+                  <p>
+                    App Version: {installed_backup_image?.info?.app_version}
+                  </p>
+                  <p>Platform: {installed_backup_image?.info?.platform}</p>
+                </>
               ) : (
-                <></>
+                <p>Error: {installed_backup_image.info?.error_message}</p>
               )}
               <div>
                 <EndpointButton
@@ -95,13 +100,14 @@ export default function ImageInfo() {
           </Col>
           <Col>
             <TitleCard title="Installed Image in Flash">
-              <p>App Name: {installed_flash_image?.info?.app_name}</p>
-              <p>App Version: {installed_flash_image?.info?.app_version}</p>
-              <p>Platform: {installed_flash_image?.info?.platform}</p>
-              {installed_flash_image?.info?.error_occurred ? (
-                <p>Error: {installed_flash_image?.info?.error_message}</p>
+              {!installed_flash_image?.info?.error_occurred ? (
+                <>
+                  <p>App Name: {installed_flash_image?.info?.app_name}</p>
+                  <p>App Version: {installed_flash_image?.info?.app_version}</p>
+                  <p>Platform: {installed_flash_image?.info?.platform}</p>
+                </>
               ) : (
-                <></>
+                <p>Error: {installed_flash_image?.info?.error_message}</p>
               )}
               <div>
                 <EndpointButton
@@ -119,13 +125,16 @@ export default function ImageInfo() {
         <Row>
           <Col>
             <TitleCard title="Installed Image in Runtime">
-              <p>App Name: {installed_runtime_image?.info?.app_name}</p>
-              <p>App Version: {installed_runtime_image?.info?.app_version}</p>
-              <p>Platform: {installed_runtime_image?.info?.platform}</p>
-              {installed_runtime_image?.info?.error_occurred ? (
-                <p>Error: {installed_runtime_image?.info?.error_message}</p>
+              {!installed_runtime_image?.info?.error_occurred ? (
+                <>
+                  <p>App Name: {installed_runtime_image?.info?.app_name}</p>
+                  <p>
+                    App Version: {installed_runtime_image?.info?.app_version}
+                  </p>
+                  <p>Platform: {installed_runtime_image?.info?.platform}</p>
+                </>
               ) : (
-                <></>
+                <p>Error: {installed_runtime_image?.info?.error_message}</p>
               )}
               <div>
                 <EndpointButton
