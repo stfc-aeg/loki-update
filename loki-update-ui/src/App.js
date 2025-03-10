@@ -7,11 +7,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 export default function App() {
   return (
     <OdinApp
-      title="Loki Update"
+      title="LOKI Update"
       icon_src="odin.png"
       navLinks={["Installed Images"]}
     >
       <ImageInfo />
     </OdinApp>
-  )
+  );
 }
