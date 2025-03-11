@@ -27,9 +27,9 @@ export default function ImageInfo() {
 
   const checkIdenticalPrimaryImages = () => {
     return (
-      installed_emmc_image?.info?.app_name !==
+      installed_emmc_image?.info?.app_name ===
         installed_runtime_image?.info?.app_name &&
-      installed_emmc_image?.info?.app_version !==
+      installed_emmc_image?.info?.app_version ===
         installed_runtime_image?.info?.app_version
     );
   };
@@ -39,10 +39,10 @@ export default function ImageInfo() {
       <Accordion defaultActiveKey={["0"]} alwaysOpen>
         <Accordion.Item eventKey="0">
           <Accordion.Header>
-            {!checkIdenticalPrimaryImages ? (
-              <>Primary Installations</>
-            ) : (
+            {checkIdenticalPrimaryImages ? (
               <>Primary Installation</>
+            ) : (
+              <>Primary Installations</>
             )}
           </Accordion.Header>
           <Accordion.Body>
@@ -87,7 +87,9 @@ export default function ImageInfo() {
                     </div>
                   </TitleCard>
                 </Col>
-                {!checkIdenticalPrimaryImages ? (
+                {checkIdenticalPrimaryImages ? (
+                  <></>
+                ) : (
                   <Col>
                     <TitleCard title="Installed Image in Runtime">
                       {!installed_runtime_image?.info?.error_occurred ? (
@@ -129,8 +131,6 @@ export default function ImageInfo() {
                       </div>
                     </TitleCard>
                   </Col>
-                ) : (
-                  <></>
                 )}
               </Row>
             </Container>
