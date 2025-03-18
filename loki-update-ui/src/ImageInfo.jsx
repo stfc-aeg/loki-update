@@ -64,6 +64,10 @@ export default function ImageInfo() {
                           <strong>Platform:</strong>{" "}
                           {installed_emmc_image?.info?.platform}
                         </p>
+                        <p>
+                          <strong>Created:</strong>{" "}
+                          {getHumanTime(installed_emmc_image?.info?.time)}
+                        </p>
                       </>
                     ) : (
                       <p>
@@ -87,7 +91,7 @@ export default function ImageInfo() {
                     </div>
                   </TitleCard>
                 </Col>
-                {checkIdenticalPrimaryImages ? (
+                {!checkIdenticalPrimaryImages ? (
                   <></>
                 ) : (
                   <Col>
@@ -157,6 +161,10 @@ export default function ImageInfo() {
                           <strong>Platform:</strong>{" "}
                           {installed_flash_image?.info?.platform}
                         </p>
+                        <p>
+                          <strong>Created:</strong>{" "}
+                          {getHumanTime(installed_flash_image?.info?.time)}
+                        </p>
                       </>
                     ) : (
                       <p>
@@ -196,6 +204,10 @@ export default function ImageInfo() {
                           <strong>Platform:</strong>{" "}
                           {installed_backup_image?.info?.platform}
                         </p>
+                        <p>
+                          <strong>Created:</strong>{" "}
+                          {getHumanTime(installed_backup_image?.info?.time)}
+                        </p>
                       </>
                     ) : (
                       <p>
@@ -234,6 +246,10 @@ export default function ImageInfo() {
                         <p>
                           <strong>Platform:</strong>{" "}
                           {installed_sd_image?.info?.platform}
+                        </p>
+                        <p>
+                          <strong>Created:</strong>{" "}
+                          {getHumanTime(installed_sd_image?.info?.time)}
                         </p>
                       </>
                     ) : (
