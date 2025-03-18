@@ -20,7 +20,8 @@ authors = [
 dependencies = [
     "odin_control @ git+https://git@github.com/odin-detector/odin-control.git@1.6.0",
     "tornado>=4.3",
-    "future"
+    "future",
+    "pyfdt"
 ]
 requires-python = ">=3.8"
 
