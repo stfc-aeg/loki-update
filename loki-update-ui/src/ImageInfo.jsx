@@ -91,7 +91,7 @@ export default function ImageInfo() {
                     </div>
                   </TitleCard>
                 </Col>
-                {!checkIdenticalPrimaryImages ? (
+                {checkIdenticalPrimaryImages ? (
                   <></>
                 ) : (
                   <Col>
