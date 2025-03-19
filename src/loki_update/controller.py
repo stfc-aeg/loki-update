@@ -1,6 +1,9 @@
 import time
 import subprocess
-import ast
+import os
+import shutil
+import logging
+from pyfdt.pyfdt import *
 
 from odin.adapters.parameter_tree import ParameterTree, ParameterTreeError
 
@@ -17,6 +20,14 @@ class LokiUpdateError(Exception):
 class LokiUpdateController():
     def __init__(self):
         
+        self.emmc_dtb_path = "/tmp/emmc.dtb"
+        self.sd_dtb_path = "/tmp/sd.dtb"
+        self.backup_dtb_path = "/tmp/backup.dtb"
+        
+        self.emmc_u_boot_path = "/mnt/emmc/image.ub"
+        self.sd_u_boot_path = "/mnt/sd/image.ub"
+        self.backup_u_boot_path = "/mnt/emmc/backup/image.ub"
+        
         # Store initialisation time
         self.init_time = time.time()
         
@@ -28,11 +39,11 @@ class LokiUpdateController():
         self.refresh_runtime_image_info = False
         
         # Store inital image info
-        self.emmc_installed_image = self.get_emmc_installed_image()
-        self.sd_installed_image = self.get_sd_installed_image()
-        self.backup_installed_image = self.get_backup_installed_image()
-        self.flash_installed_image = self.get_flash_installed_image()
-        self.runtime_installed_image = self.get_runtime_installed_image()
+        self.emmc_installed_image = self.get_installed_image("emmc")
+        self.sd_installed_image = self.get_installed_image("sd")
+        self.backup_installed_image = self.get_installed_image("backup")
+        self.flash_installed_image = self.get_installed_image("flash")
+        self.runtime_installed_image = self.get_installed_image("runtime")
         
         self.installed_images_tree = ParameterTree({
             "emmc": {
@@ -94,116 +105,32 @@ class LokiUpdateController():
         except ParameterTreeError as e:
             raise LokiUpdateError(e)
     
-    def get_emmc_installed_image(self):
-        output = subprocess.run(["loki-update.sh", "--info", "alljson", "--target", "emmc"], capture_output=True, text=True)
+    def cleanup(self):
+        """Clean up the LokiUpdateController instance.
         
-        error_occurred, error_message = self.get_error_info(output)
-        emmc_image = {}
+        This method removes all temporary files used in this controller.
+        """
+        os.remove(self.emmc_dtb_path)
+        os.remove(self.sd_dtb_path)
+        os.remove(self.backup_dtb_path)
         
-        if not error_occurred:
-            emmc_image = ast.literal_eval(output.stdout.strip())
+    def get_installed_image(self, device):
+        if device == "runtime":
+           name, app_version, loki_version, platform, timestamp, error_occured, error_message = self.get_runtime_image_metadata()
+        else:
+            name, app_version, loki_version, platform, timestamp, error_occured, error_message = self.get_image_metadata_from_dtb(device)
             
         return {
-            "app_name": self.check_empty_info(emmc_image.get("app-name", None)),
-            "app_version": self.check_empty_info(emmc_image.get("app-version", None)),
-            "loki_version": self.check_empty_info(emmc_image.get("loki-version", None)),
-            "platform": self.check_empty_info(emmc_image.get("platform", None)),
-            "time": emmc_image.get("time", None),
-            "error_occurred": error_occurred,
+            "app_name": self.check_empty_info(name),
+            "app_version": self.check_empty_info(app_version),
+            "loki_version": self.check_empty_info(loki_version),
+            "platform": self.check_empty_info(platform),
+            "time": timestamp,
+            "error_occurred": error_occured,
             "error_message": error_message,
             "last_refresh": time.time()
             
         }
-
-    def get_sd_installed_image(self):        
-        output = subprocess.run(["loki-update.sh", "--target", "sd", "--info", "alljson"], capture_output=True, text=True)
-        
-        error_occurred, error_message = self.get_error_info(output)
-        sd_image = {}
-        
-        if not error_occurred:
-            sd_image = ast.literal_eval(output.stdout.strip())
-        
-        return {
-            "app_name": self.check_empty_info(sd_image.get("app-name", None)),
-            "app_version": self.check_empty_info(sd_image.get("app-version", None)),
-            "loki_version": self.check_empty_info(sd_image.get("loki-version", None)),
-            "platform": self.check_empty_info(sd_image.get("platform", None)),
-            "time": sd_image.get("time", None),
-            "error_occurred": error_occurred,
-            "error_message": error_message,
-            "last_refresh": time.time()
-        }
-    
-    def get_backup_installed_image(self):     
-        output = subprocess.run(["loki-update.sh", "--target", "backup", "--info", "alljson"], capture_output=True, text=True)
-        
-        error_occurred, error_message = self.get_error_info(output)
-        backup_image = {}
-        
-        if not error_occurred:
-            backup_image = ast.literal_eval(output.stdout.strip())
-        
-        return {
-            "app_name": self.check_empty_info(backup_image.get("app-name", None)),
-            "app_version": self.check_empty_info(backup_image.get("app-version", None)),
-            "loki_version": self.check_empty_info(backup_image.get("loki-version", None)),
-            "platform": self.check_empty_info(backup_image.get("platform", None)),
-            "time": backup_image.get("time", None),
-            "error_occurred": error_occurred,
-            "error_message": error_message,
-            "last_refresh": time.time()
-        }
-    
-    def get_flash_installed_image(self):
-        output = subprocess.run(["sudo", "loki-update.sh", "--target", "flash", "--info", "alljson"], capture_output=True, text=True)
-        
-        error_occurred, error_message = self.get_error_info(output)
-        flash_image = {}
-        
-        if not error_occurred:
-            flash_image = ast.literal_eval(output.stdout.strip())
-        
-        return {
-            "app_name": self.check_empty_info(flash_image.get("app-name", None)),
-            "app_version":  self.check_empty_info(flash_image.get("app-version", None)),
-            "loki_version": self.check_empty_info(flash_image.get("loki-version", None)),
-            "platform":  self.check_empty_info(flash_image.get("platform", None)),
-            "time": flash_image.get("time", None),
-            "error_occurred": error_occurred,
-            "error_message": error_message,
-            "last_refresh": time.time()
-        }
-        
-    def get_runtime_installed_image(self):
-        output = subprocess.run(["loki-update.sh", "--target", "runtime", "--info", "alljson"], capture_output=True, text=True)
-        
-        error_occurred, error_message = self.get_error_info(output)
-        runtime_image = {}
-        
-        if not error_occurred:
-            runtime_image = ast.literal_eval(output.stdout.strip())
-        
-        return {
-            "app_name": self.check_empty_info(runtime_image.get("app-name", None)),
-            "app_version": self.check_empty_info(runtime_image.get("app-version", None)),
-            "loki_version": self.check_empty_info(runtime_image.get("loki-version", None)),
-            "platform": self.check_empty_info(runtime_image.get("platform", None)),
-            "time": runtime_image.get("time", None),
-            "error_occurred": error_occurred,
-            "error_message": error_message,
-            "last_refresh": time.time()
-        }
-        
-    def get_error_info(self, output):
-        error_occurred = False
-        error_message = None
-        
-        if output.returncode != 0:
-            error_occurred = True
-            error_message = output.stderr.strip()
-        
-        return error_occurred, error_message
     
     def get_refresh_all_image_info(self):
         return self.refresh_all_image_info
@@ -212,11 +139,11 @@ class LokiUpdateController():
         self.refresh_all_image_info = bool(refresh)
         
         if self.refresh_all_image_info:
-            self.emmc_installed_image = self.get_emmc_installed_image()
-            self.sd_installed_image = self.get_sd_installed_image()
-            self.backup_installed_image = self.get_backup_installed_image()
-            self.flash_installed_image = self.get_flash_installed_image()
-            self.runtime_installed_image = self.get_runtime_installed_image()
+            self.emmc_installed_image = self.get_installed_image("emmc")
+            self.sd_installed_image = self.get_installed_image("sd")
+            self.backup_installed_image = self.get_installed_image("backup")
+            self.flash_installed_image = self.get_installed_image("flash")
+            self.runtime_installed_image = self.get_installed_image("runtime")
             self.refresh_image_all_info = False
             
     def get_refresh_emmc_image_info(self):
@@ -226,7 +153,7 @@ class LokiUpdateController():
         self.refresh_emmc_image_info = bool(refresh)
         
         if self.refresh_emmc_image_info:
-            self.emmc_installed_image = self.get_emmc_installed_image()
+            self.emmc_installed_image = self.get_installed_image("emmc")
             self.refresh_emmc_image_info = False
     
     def get_refresh_sd_image_info(self):
@@ -236,7 +163,7 @@ class LokiUpdateController():
         self.refresh_sd_image_info = bool(refresh)
         
         if self.refresh_sd_image_info:
-            self.sd_installed_image = self.get_sd_installed_image()
+            self.sd_installed_image = self.get_installed_image("sd")
             self.refresh_sd_image_info = False
             
     def get_refresh_backup_image_info(self):
@@ -246,7 +173,7 @@ class LokiUpdateController():
         self.refresh_backup_image_info = bool(refresh)
         
         if self.refresh_backup_image_info:
-            self.backup_installed_image = self.get_backup_installed_image()
+            self.backup_installed_image = self.get_installed_image("backup")
             self.refresh_backup_image_info = False
             
     def get_refresh_flash_image_info(self):
@@ -256,7 +183,7 @@ class LokiUpdateController():
         self.refresh_flash_image_info = bool(refresh)
         
         if self.refresh_flash_image_info:
-            self.flash_installed_image = self.get_flash_installed_image()
+            self.flash_installed_image = self.get_installed_image("flash")
             self.refresh_flash_image_info = False
             
     def get_refresh_runtime_image_info(self):
@@ -266,7 +193,7 @@ class LokiUpdateController():
         self.refresh_runtime_image_info = bool(refresh)
         
         if self.refresh_runtime_image_info:
-            self.runtime_installed_image = self.get_runtime_installed_image()
+            self.runtime_installed_image = self.get_installed_image("runtime")
             self.refresh_runtime_image_info = False
     
     def check_empty_info(self, info):
@@ -274,3 +201,124 @@ class LokiUpdateController():
             return "Details couldn't be retrieved"
         
         return info
+    
+    def get_image_metadata_from_dtb(self, device):      
+        try:
+            name = ""
+            app_version = ""
+            loki_version = ""
+            platform = ""
+            timestamp = ""
+            error_occured = False
+            error_message = ""
+            
+            if device in ["emmc", "sd", "backup"]:
+                
+                match device:
+                    case "emmc":
+                        u_boot_path = self.emmc_u_boot_path
+                        dtb_path = self.emmc_dtb_path
+                    case "sd":
+                        u_boot_path = self.sd_u_boot_path
+                        dtb_path = self.sd_dtb_path
+                    case "backup":
+                        u_boot_path = self.backup_u_boot_path
+                        dtb_path = self.backup_dtb_path            
+                
+                self.check_for_error(subprocess.run(["dumpimage", "-T", "flat_dt", "-p", "1", u_boot_path, "-o", dtb_path], capture_output=True, text=True))
+                
+                with open(dtb_path, "rb") as fdt_file:
+                    fdt = FdtBlobParse(fdt_file)
+                
+            elif device == "flash":
+                temp_dir_output = subprocess.run(["mktemp", "-d"], capture_output=True, text=True)
+                self.check_for_error(temp_dir_output)
+                temp_dir = temp_dir_output.stdout.strip()
+                
+                device_list_output = subprocess.run(["sudo", "lsmtd", "-r"], capture_output=True, text=True)
+                self.check_for_error(device_list_output)
+                device_list = device_list_output.stdout.splitlines()
+                
+                for line in device_list:
+                    if "kernel" in line:
+                        label = line.split()[0]
+                        break
+                
+                kernel_mtddev = "/dev/" + label
+                
+                u_boot_path = temp_dir + "/image.ub"
+                dtb_path = temp_dir + "/system.dtb"
+                
+                with open(kernel_mtddev, "rb") as kernel_mtddev_file:
+                    kernel_mtddev_contents = kernel_mtddev_file.read()
+                    kernel_mtddev_file.close()
+                
+                with open(u_boot_path, "wb") as u_boot_file:
+                    u_boot_file.write(kernel_mtddev_contents)
+                    u_boot_file.close()
+                    
+                self.check_for_error(subprocess.run(["dumpimage", "-T", "flat_dt", "-p", "1", u_boot_path, "-o", dtb_path], capture_output=True, text=True))
+                
+                with open(dtb_path, "rb") as fdt_file:
+                    fdt = FdtBlobParse(fdt_file)
+                
+                shutil.rmtree(temp_dir)
+
+            json_fdt =  json.loads(fdt.to_fdt().to_json())
+
+            name = json_fdt["loki-metadata"]["application-name"][1]
+            app_version = json_fdt["loki-metadata"]["application-version"][1]
+            loki_version = json_fdt["loki-metadata"]["loki-version"][1]
+            platform = json_fdt["loki-metadata"]["platform"][1]
+            
+            timestamp_output = subprocess.run(["fdtget", "-t", "i", u_boot_path, "/", "timestamp"], capture_output=True, text=True)
+            self.check_for_error(timestamp_output)
+            timestamp = timestamp_output.stdout.strip()
+            
+        except Exception as error:  
+            error_occured = True
+            error_message = str(error)
+            logging.error(str(error))
+            
+            if device == "flash":
+                shutil.rmtree(temp_dir)
+            
+        finally:
+            return name, app_version, loki_version, platform, timestamp, error_occured, error_message
+    
+    def get_runtime_image_metadata(self):
+        try:
+            name = ""
+            app_version = ""
+            loki_version = ""
+            platform = ""
+            timestamp = ""
+            error_occured = False
+            error_message = ""
+            
+            with open("/sys/firmware/devicetree/base/loki-metadata/application-name", "r") as file:
+                name = file.read()
+                file.close()
+                
+            with open("/sys/firmware/devicetree/base/loki-metadata/application-version", "r") as file:
+                app_version = file.read()
+                file.close()
+            
+            with open("/sys/firmware/devicetree/base/loki-metadata/loki-version", "r") as file:
+                loki_version = file.read()
+                file.close()
+            
+            with open("/sys/firmware/devicetree/base/loki-metadata/platform", "r") as file:
+                platform = file.read()
+                file.close()
+                
+        except Exception as error:
+            error_occured = True
+            error_message = str(error)
+            
+        finally:
+            return name, app_version, loki_version, platform, timestamp, error_occured, error_message
+
+    def check_for_error(self, process):
+        if process.returncode != 0:
+            raise Exception(process.stderr.strip())
