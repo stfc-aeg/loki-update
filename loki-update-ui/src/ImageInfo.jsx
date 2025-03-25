@@ -6,11 +6,12 @@ import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
 import Accordion from "react-bootstrap/esm/Accordion";
 import moment from "moment";
+import FileUploadModal from "./FileUploadModal";
 
 export default function ImageInfo() {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.154:8888"
+    "http://192.168.0.194:8888"
   );
 
   const EndpointButton = WithEndpoint(Button);
@@ -88,6 +89,10 @@ export default function ImageInfo() {
                       >
                         Refresh
                       </EndpointButton>
+                      <FileUploadModal
+                        currentImage={installed_emmc_image?.info}
+                        device={"emmc"}
+                      />
                     </div>
                   </TitleCard>
                 </Col>
@@ -132,6 +137,10 @@ export default function ImageInfo() {
                         >
                           Refresh
                         </EndpointButton>
+                        <FileUploadModal
+                          currentImage={installed_runtime_image?.info}
+                          device={"runtime"}
+                        />
                       </div>
                     </TitleCard>
                   </Col>
@@ -185,6 +194,10 @@ export default function ImageInfo() {
                       >
                         Refresh
                       </EndpointButton>
+                      <FileUploadModal
+                        currentImage={installed_flash_image?.info}
+                        device={"flash"}
+                      />
                     </div>
                   </TitleCard>
                 </Col>
@@ -228,6 +241,10 @@ export default function ImageInfo() {
                       >
                         Refresh
                       </EndpointButton>
+                      <FileUploadModal
+                        currentImage={installed_backup_image?.info}
+                        device={"backup"}
+                      />
                     </div>
                   </TitleCard>
                 </Col>
@@ -271,6 +288,10 @@ export default function ImageInfo() {
                       >
                         Refresh
                       </EndpointButton>
+                      <FileUploadModal
+                        currentImage={installed_sd_image?.info}
+                        device={"sd"}
+                      />
                     </div>
                   </TitleCard>
                 </Col>
