@@ -5,15 +5,19 @@ import Container from "react-bootstrap/esm/Container";
 import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
 import Accordion from "react-bootstrap/esm/Accordion";
+import Spinner from "react-bootstrap/Spinner";
 import moment from "moment";
 
 export default function ImageInfo() {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.154:8888"
+    "http://127.0.0.1:8888",
+    1000
   );
 
   const EndpointButton = WithEndpoint(Button);
+
+  let flashLoading = endpoint?.data?.installed_images?.flash?.loading;
 
   let installed_emmc_image = endpoint?.data?.installed_images?.emmc;
   let installed_sd_image = endpoint?.data?.installed_images?.sd;
@@ -63,6 +67,10 @@ export default function ImageInfo() {
                         <p>
                           <strong>Platform:</strong>{" "}
                           {installed_emmc_image?.info?.platform}
+                        </p>
+                        <p>
+                          <strong>Created:</strong>{" "}
+                          {getHumanTime(installed_emmc_image?.info?.time)}
                         </p>
                       </>
                     ) : (
@@ -143,41 +151,53 @@ export default function ImageInfo() {
               <Row>
                 <Col>
                   <TitleCard title="Installed Image in Flash (Recovery)">
-                    {!installed_flash_image?.info?.error_occurred ? (
-                      <>
-                        <p>
-                          <strong>App Name:</strong>{" "}
-                          {installed_flash_image?.info?.app_name}
-                        </p>
-                        <p>
-                          <strong>App Version:</strong>{" "}
-                          {installed_flash_image?.info?.app_version}
-                        </p>
-                        <p>
-                          <strong>Platform:</strong>{" "}
-                          {installed_flash_image?.info?.platform}
-                        </p>
-                      </>
+                    {flashLoading ? (
+                      <Spinner animation="border" variant="primary" />
                     ) : (
-                      <p>
-                        <strong>Error:</strong>{" "}
-                        {installed_flash_image?.info?.error_message}
-                      </p>
+                      <>
+                        {!installed_flash_image?.info?.error_occurred ? (
+                          <>
+                            <p>
+                              <strong>App Name:</strong>{" "}
+                              {installed_flash_image?.info?.app_name}
+                            </p>
+                            <p>
+                              <strong>App Version:</strong>{" "}
+                              {installed_flash_image?.info?.app_version}
+                            </p>
+                            <p>
+                              <strong>Platform:</strong>{" "}
+                              {installed_flash_image?.info?.platform}
+                            </p>
+                            <p>
+                              <strong>Created:</strong>{" "}
+                              {getHumanTime(installed_flash_image?.info?.time)}
+                            </p>
+                          </>
+                        ) : (
+                          <p>
+                            <strong>Error:</strong>{" "}
+                            {installed_flash_image?.info?.error_message}
+                          </p>
+                        )}
+                        <p>
+                          <strong>Last Refresh:</strong>{" "}
+                          {getHumanTime(
+                            installed_flash_image?.info?.last_refresh
+                          )}
+                        </p>
+                        <div>
+                          <EndpointButton
+                            endpoint={endpoint}
+                            event_type="click"
+                            fullpath="installed_images/flash/refresh"
+                            value={true}
+                          >
+                            Refresh
+                          </EndpointButton>
+                        </div>
+                      </>
                     )}
-                    <p>
-                      <strong>Last Refresh:</strong>{" "}
-                      {getHumanTime(installed_flash_image?.info?.last_refresh)}
-                    </p>
-                    <div>
-                      <EndpointButton
-                        endpoint={endpoint}
-                        event_type="click"
-                        fullpath="installed_images/flash/refresh"
-                        value={true}
-                      >
-                        Refresh
-                      </EndpointButton>
-                    </div>
                   </TitleCard>
                 </Col>
                 <Col>
@@ -195,6 +215,10 @@ export default function ImageInfo() {
                         <p>
                           <strong>Platform:</strong>{" "}
                           {installed_backup_image?.info?.platform}
+                        </p>
+                        <p>
+                          <strong>Created:</strong>{" "}
+                          {getHumanTime(installed_backup_image?.info?.time)}
                         </p>
                       </>
                     ) : (
@@ -234,6 +258,10 @@ export default function ImageInfo() {
                         <p>
                           <strong>Platform:</strong>{" "}
                           {installed_sd_image?.info?.platform}
+                        </p>
+                        <p>
+                          <strong>Created:</strong>{" "}
+                          {getHumanTime(installed_sd_image?.info?.time)}
                         </p>
                       </>
                     ) : (

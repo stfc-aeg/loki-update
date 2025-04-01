@@ -90,3 +90,11 @@ class LokiUpdateAdapter(ApiAdapter):
         logging.debug(response)
 
         return ApiAdapterResponse(response, status_code=status_code)
+    
+    def cleanup(self):
+        """Clean up adapter state at shutdown.
+
+        This method cleans up the adapter state when called by the server at e.g. shutdown.
+        It simplied calls the cleanup function of the controller instance.
+        """
+        self.controller.cleanup()
