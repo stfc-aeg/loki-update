@@ -7,7 +7,8 @@ import FileUploadModal from "./FileUploadModal";
 export default function ImageInfoCard({ installed_image, title, device }) {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888"
+    "http://192.168.0.194:8888",
+    1000
   );
 
   const EndpointButton = WithEndpoint(Button);
@@ -52,7 +53,14 @@ export default function ImageInfoCard({ installed_image, title, device }) {
         >
           Refresh
         </EndpointButton>
-        <FileUploadModal currentImage={installed_image?.info} device={device} />
+        {device !== "backup" ? (
+          <FileUploadModal
+            currentImage={installed_image?.info}
+            device={device}
+          />
+        ) : (
+          <></>
+        )}
       </div>
     </TitleCard>
   );
