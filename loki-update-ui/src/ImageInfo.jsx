@@ -10,10 +10,13 @@ import ImageInfoCard from "./ImageInfoCard";
 export default function ImageInfo() {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888"
+    "http://127.0.0.1:8888",
+    1000
   );
 
   const EndpointButton = WithEndpoint(Button);
+
+  let flashLoading = endpoint?.data?.installed_images?.flash?.loading;
 
   let installed_emmc_image = endpoint?.data?.installed_images?.emmc;
   let installed_sd_image = endpoint?.data?.installed_images?.sd;
