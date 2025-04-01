@@ -1,5 +1,5 @@
 .installed-images-container {
-  margin-top: 2rem;
+  margin-top: 1rem;
   margin-left: 2rem;
   margin-right: 2rem;
 }
@@ -10,4 +10,8 @@
 
 .update-button {
   margin-left: 1rem;
+}
+
+.toast {
+  text-align: center;
 }

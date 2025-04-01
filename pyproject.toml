@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=64", "setuptools_scm[toml]>=7"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "loki-update"
 classifiers = [
+    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -23,7 +24,4 @@ dependencies = [
     "future",
     "pyfdt"
 ]
-requires-python = ">=3.8"
-
-[tool.setuptools_scm]
-version_file = "src/loki_update/_version.py"
+requires-python = ">=3.7"

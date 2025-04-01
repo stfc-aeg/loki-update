@@ -3,7 +3,12 @@ import subprocess
 import os
 import shutil
 import logging
+import pathlib
+from concurrent import futures
+
 from pyfdt.pyfdt import *
+
+from tornado.concurrent import run_on_executor
 
 from odin.adapters.parameter_tree import ParameterTree, ParameterTreeError
 
@@ -18,15 +23,23 @@ class LokiUpdateError(Exception):
     pass
 
 class LokiUpdateController():
-    def __init__(self):
+    
+    # Thread executor for background tasks
+    executor = futures.ThreadPoolExecutor(max_workers=1)
+    
+    def __init__(self, emmc_base_path, sd_base_path, backup_base_path):
+        # Save arguments
+        self.emmc_base_path = emmc_base_path
+        self.sd_base_path = sd_base_path
+        self.backup_base_path = backup_base_path
         
         self.emmc_dtb_path = "/tmp/emmc.dtb"
         self.sd_dtb_path = "/tmp/sd.dtb"
         self.backup_dtb_path = "/tmp/backup.dtb"
         
-        self.emmc_u_boot_path = "/mnt/emmc/image.ub"
-        self.sd_u_boot_path = "/mnt/sd/image.ub"
-        self.backup_u_boot_path = "/mnt/emmc/backup/image.ub"
+        self.emmc_u_boot_path = self.emmc_base_path + "image.ub"
+        self.sd_u_boot_path = self.sd_base_path + "image.ub"
+        self.backup_u_boot_path = self.backup_base_path + "image.ub"
         
         # Store initialisation time
         self.init_time = time.time()
@@ -44,6 +57,14 @@ class LokiUpdateController():
         self.backup_installed_image = self.get_installed_image("backup")
         self.flash_installed_image = self.get_installed_image("flash")
         self.runtime_installed_image = self.get_installed_image("runtime")
+        
+        self.copying = False
+        self.file_name_copying = ""
+        self.copy_progress = 0
+        self.copy_error = False
+        self.copy_error_message = ""
+        self.copy_target = ""
+        self.checksums = []
         
         self.installed_images_tree = ParameterTree({
             "emmc": {
@@ -69,10 +90,20 @@ class LokiUpdateController():
             "refresh_all_image_info": (self.get_refresh_all_image_info, self.set_refresh_all_image_info)
         })
         
+        
         self.param_tree = ParameterTree({
             "loki_update_version": __version__,
             "server_uptime": (self.get_server_uptime, None),
-            "installed_images": self.installed_images_tree
+            "installed_images": self.installed_images_tree,
+            "copy_progress": {
+                "copying": (lambda: self.copying, None),
+                "file_name": (lambda: self.file_name_copying, None),
+                "progress": (lambda: self.copy_progress, None),
+                "copy_error": (lambda: self.copy_error, None),
+                "copy_error_message": (lambda: self.copy_error_message, None),
+                "target": (self.get_copy_target, self.set_copy_target),
+                "checksums": (None, self.set_checksums)
+            }
         })
     
     def get_server_uptime(self):
@@ -129,7 +160,6 @@ class LokiUpdateController():
             "error_occurred": error_occured,
             "error_message": error_message,
             "last_refresh": time.time()
-            
         }
     
     def get_refresh_all_image_info(self):
@@ -202,7 +232,7 @@ class LokiUpdateController():
         
         return info
     
-    def get_image_metadata_from_dtb(self, device):      
+    def get_image_metadata_from_dtb(self, device):
         try:
             name = ""
             app_version = ""
@@ -213,17 +243,15 @@ class LokiUpdateController():
             error_message = ""
             
             if device in ["emmc", "sd", "backup"]:
-                
-                match device:
-                    case "emmc":
-                        u_boot_path = self.emmc_u_boot_path
-                        dtb_path = self.emmc_dtb_path
-                    case "sd":
-                        u_boot_path = self.sd_u_boot_path
-                        dtb_path = self.sd_dtb_path
-                    case "backup":
-                        u_boot_path = self.backup_u_boot_path
-                        dtb_path = self.backup_dtb_path            
+                if device == "emmc":
+                    u_boot_path = self.emmc_u_boot_path
+                    dtb_path = self.emmc_dtb_path
+                elif device == "sd":
+                    u_boot_path = self.sd_u_boot_path
+                    dtb_path = self.sd_dtb_path
+                elif device == "backup":
+                    u_boot_path = self.backup_u_boot_path
+                    dtb_path = self.backup_dtb_path                                    
                 
                 self.check_for_error(subprocess.run(["dumpimage", "-T", "flat_dt", "-p", "1", u_boot_path, "-o", dtb_path], capture_output=True, text=True))
                 
@@ -235,7 +263,7 @@ class LokiUpdateController():
                 self.check_for_error(temp_dir_output)
                 temp_dir = temp_dir_output.stdout.strip()
                 
-                device_list_output = subprocess.run(["sudo", "lsmtd", "-r"], capture_output=True, text=True)
+                device_list_output = subprocess.run(["lsmtd", "-r"], capture_output=True, text=True)
                 self.check_for_error(device_list_output)
                 device_list = device_list_output.stdout.splitlines()
                 
@@ -249,13 +277,10 @@ class LokiUpdateController():
                 u_boot_path = temp_dir + "/image.ub"
                 dtb_path = temp_dir + "/system.dtb"
                 
-                with open(kernel_mtddev, "rb") as kernel_mtddev_file:
-                    kernel_mtddev_contents = kernel_mtddev_file.read()
-                    kernel_mtddev_file.close()
+                os.system(f"cat {kernel_mtddev} > {u_boot_path}")
                 
-                with open(u_boot_path, "wb") as u_boot_file:
-                    u_boot_file.write(kernel_mtddev_contents)
-                    u_boot_file.close()
+                print(temp_dir)
+                subprocess.run(["ls", "-lah", temp_dir], text=True)
                     
                 self.check_for_error(subprocess.run(["dumpimage", "-T", "flat_dt", "-p", "1", u_boot_path, "-o", dtb_path], capture_output=True, text=True))
                 
@@ -322,3 +347,76 @@ class LokiUpdateController():
     def check_for_error(self, process):
         if process.returncode != 0:
             raise Exception(process.stderr.strip())
+    
+    def upload_file(self, files):
+        #target = self.get_copy_target()
+        target = "emmc"
+        if target == "emmc":
+            base_path = self.emmc_base_path
+        elif target == "sd":
+            base_path = self.sd_base_path
+        elif target == "backup":
+            base_path = self.backup_base_path
+        
+        temp_dir = f"/tmp/{target}"
+        
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
+        
+        file_names = []
+        
+        for file in files:
+            file_names.append(file["filename"])
+            with open(temp_dir + file["filename"], "wb") as out_file:
+                out_file.write(file["body"])
+        
+        self.copy_all_files(temp_dir, base_path, file_names)
+        
+    @run_on_executor
+    def copy_all_files(self, temp_dir, base_path, file_names):
+        self.copying = True
+        try:
+            for file in file_names:
+                self.file_name_copying = file
+                source = temp_dir + file
+                destination = base_path + file
+                self.copy_file(source, destination)
+            
+            shutil.rmtree(temp_dir)
+        except Exception as error:
+            self.copy_error = True
+            self.copy_error_message = str(error)
+            
+        self.copying = False
+    
+    def copy_file(self, src, dest):
+        src_path = pathlib.Path(src)
+        dest_path = pathlib.Path(dest)
+        
+        buffer_size = 64 * 1024
+        
+        size = os.stat(src).st_size
+        with open(src_path, "rb") as src_file:
+            with open(dest_path, "wb") as dest_file:
+                self.copy_file_object(src_file, dest_file, buffer_size=buffer_size, total=size)
+        
+        shutil.copymode(str(src_path), str(dest_path))
+    
+    def copy_file_object(self, src, dest, buffer_size, total):
+        total_copied = 0
+        while True:
+            buf = src.read(buffer_size)
+            if not buf:
+                break
+            dest.write(buf)
+            total_copied += len(buf)
+            self.copy_progress = round((total_copied / total) * 100, 1)
+    
+    def get_copy_target(self):
+        return self.copy_target
+    
+    def set_copy_target(self, target):
+        self.copy_target = target
+        
+    def set_checksums(self, checksums):
+        self.checksums = checksums
