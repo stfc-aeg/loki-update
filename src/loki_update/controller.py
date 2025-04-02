@@ -65,11 +65,14 @@ class LokiUpdateController():
         self.copying_to_flash = False
         self.flash_copy_stage = ""
         self.flash_copy_file_num = 0
+        
         self.get_flash_image_metadata_from_dtb()
         self.emmc_installed_image = self.get_installed_image("emmc")
         self.sd_installed_image = self.get_installed_image("sd")
         self.backup_installed_image = self.get_installed_image("backup")
         self.runtime_installed_image = self.get_installed_image("runtime")
+        
+        self.emmc_backup = False
         
         self.copying = False
         self.file_name_copying = ""
@@ -82,7 +85,8 @@ class LokiUpdateController():
         self.installed_images_tree = ParameterTree({
             "emmc": {
                 "info": (lambda: self.emmc_installed_image, None),
-                "refresh": (self.get_refresh_emmc_image_info, self.set_refresh_emmc_image_info)
+                "refresh": (self.get_refresh_emmc_image_info, self.set_refresh_emmc_image_info),
+                "backup": (self.get_emmc_backup, self.set_emmc_backup)
                 },
             "sd": {
                 "info": (lambda: self.sd_installed_image, None),
@@ -539,3 +543,25 @@ class LokiUpdateController():
     
     def set_checksums(self, checksums):
         self.checksums = checksums
+    
+    def get_emmc_backup(self):
+        return self.emmc_backup
+
+    def set_emmc_backup(self, backup):
+        self.emmc_backup = bool(backup)
+        
+        if self.emmc_backup:
+            self.copy_from_emmc_to_backup()
+    
+    @run_on_executor
+    def copy_from_emmc_to_backup(self):
+        files_to_copy = ["BOOT.BIN", "boot.scr", "image.ub"]
+        
+        for file in files_to_copy:
+            self.file_name_copying = file
+            src_path = self.emmc_base_path + file
+            dest_path = self.backup_base_path + file
+            self.copy_file(src_path, dest_path)
+        
+        self.emmc_backup = False
+        self.set_refresh_backup_image_info(True)

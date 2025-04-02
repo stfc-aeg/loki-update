@@ -112,7 +112,7 @@ export default function FileUploadModal({ currentImage, device }) {
   return (
     <>
       <Button
-        className={"update-button"}
+        className={"card-button"}
         onClick={handleOpen}
         disabled={copying || flashCopying}
       >

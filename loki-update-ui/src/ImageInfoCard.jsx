@@ -4,7 +4,7 @@ import moment from "moment";
 import Button from "react-bootstrap/esm/Button";
 import Spinner from "react-bootstrap/Spinner";
 import FileUploadModal from "./FileUploadModal";
-
+import BackUpImageModal from "./BackUpImageModal";
 export default function ImageInfoCard({ installed_image, title, device }) {
   const endpoint = useAdapterEndpoint(
     "loki-update",
@@ -61,14 +61,15 @@ export default function ImageInfoCard({ installed_image, title, device }) {
             >
               Refresh
             </EndpointButton>
-            {device !== "backup" || device !== "runtime" ? (
+            {device === "backup" || device === "runtime" ? (
+              <></>
+            ) : (
               <FileUploadModal
                 currentImage={installed_image?.info}
                 device={device}
               />
-            ) : (
-              <></>
             )}
+            {device === "emmc" ? <BackUpImageModal /> : <></>}
           </div>
         </>
       )}
