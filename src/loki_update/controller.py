@@ -428,14 +428,34 @@ class LokiUpdateController():
             os.mkdir(temp_dir)
         
         file_names = []
+        try:
+            for file in files:
+                file_names.append(file["filename"])
+                with open(temp_dir + file["filename"], "wb") as out_file:
+                    out_file.write(file["body"])
+                    
+        except FileNotFoundError as error:
+            logging.error("Temporary file location not found")
+            
+        except Exception as error:
+            logging.error(str(error))
         
-        for file in files:
-            file_names.append(file["filename"])
-            with open(temp_dir + file["filename"], "wb") as out_file:
-                out_file.write(file["body"])
+        for file in file_names:
+            with open(temp_dir + file, "rb") as in_file:
+                hash = hashlib.new("sha256")
+                hash.update(in_file.read())
+            
+            checksum = next(item for item in self.checksums if item["fileName"] == file)["checksum"]
+            
+            if str(hash.hexdigest()) != str(checksum):
+                self.copy_error = True
+                raise LokiUpdateError("Checksum failed")
         
-        self.copy_all_files(temp_dir, base_path, file_names)
-        
+        if target == "flash":
+            self.copy_to_flash(temp_dir, file_names)
+            self.set_refresh_flash_image_info(True)
+        else:
+            self.copy_all_files(temp_dir, base_path, file_names)
         
     @run_on_executor
     def copy_all_files(self, temp_dir, base_path, file_names):

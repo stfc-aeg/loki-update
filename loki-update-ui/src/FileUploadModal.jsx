@@ -43,10 +43,15 @@ export default function FileUploadModal({ currentImage, device }) {
   };
 
   const generateHash = async (file) => {
+    let checksumObject = {};
+    checksumObject["fileName"] = file.name;
     const content = await file.arrayBuffer();
     const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(content));
-    
-    return CryptoJS.SHA256(wordArray).toString(CryptoJS.enc.Hex);
+    checksumObject["checksum"] = CryptoJS.SHA256(wordArray).toString(
+      CryptoJS.enc.Hex
+    );
+
+    return checksumObject;
   };
 
   const handleSubmit = async (e) => {

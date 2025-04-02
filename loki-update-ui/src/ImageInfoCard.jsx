@@ -61,7 +61,7 @@ export default function ImageInfoCard({ installed_image, title, device }) {
             >
               Refresh
             </EndpointButton>
-            {device !== "backup" ? (
+            {device !== "backup" || device !== "runtime" ? (
               <FileUploadModal
                 currentImage={installed_image?.info}
                 device={device}
