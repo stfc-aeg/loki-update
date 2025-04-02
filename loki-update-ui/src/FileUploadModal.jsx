@@ -7,24 +7,30 @@ import ToastContainer from "react-bootstrap/ToastContainer";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import axios from "axios";
 import { useAdapterEndpoint } from "odin-react";
-import sha256 from "crypto-js/sha256";
 import CryptoJS from "crypto-js";
 
 export default function FileUploadModal({ currentImage, device }) {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888"
+    "http://192.168.0.194:8888",
+    1000
   );
 
   const copying = endpoint?.data?.copy_progress?.copying;
   const progress = endpoint?.data?.copy_progress?.progress;
   const fileCopying = endpoint?.data?.copy_progress?.file_name;
+  const flashCopying = endpoint?.data?.copy_progress?.flash_copying;
+  const flashStage = endpoint?.data?.copy_progress?.flash_copy_stage;
+  const flashCopyFileNum =
+    endpoint?.data?.copy_progress?.flash_copying_file_num;
+  const copyError = endpoint?.data?.copy_progress?.copy_error;
+  const currentTarget = endpoint?.data?.copy_progress?.target;
 
   const [show, setShow] = useState(false);
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
-  const [error, setError] = useState(false);
+  const [uploadError, setUploadError] = useState(false);
 
   const handleOpen = () => setShow(true);
   const handleClose = () => {
@@ -38,33 +44,46 @@ export default function FileUploadModal({ currentImage, device }) {
 
   const generateHash = async (file) => {
     const content = await file.arrayBuffer();
-    const hashContent = sha256(content).toString(CryptoJS.enc.utf8);
-    console.log(content);
-    console.log(hashContent);
-
-    return hashContent;
+    const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(content));
+    
+    return CryptoJS.SHA256(wordArray).toString(CryptoJS.enc.Hex);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    handleClose();
     setUploading(true);
 
-    // let checksums = [];
-    // files.map(async (file) => checksums.push(await generateHash(file)));
-
-    // console.log(checksums);
-
-    // await axios.put(
-    //   "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/checksums",
-    //   checksums
-    // );
+    let checksums = [];
+    await Promise.all(
+      files.map(async (file) => checksums.push(await generateHash(file)))
+    );
 
     const formData = new FormData();
     files.map((file) => formData.append("file", file));
 
     try {
-      setError(false);
-      handleClose();
+      setUploadError(false);
+
+      await axios.put(
+        "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/checksums",
+        JSON.stringify(checksums),
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      await axios.put(
+        "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/target",
+        JSON.stringify(device),
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       await axios.post(
         "http://192.168.0.194:8888/api/0.1/loki-update",
@@ -81,7 +100,7 @@ export default function FileUploadModal({ currentImage, device }) {
     } catch (error) {
       console.log(error);
       setUploading(false);
-      setError(true);
+      setUploadError(true);
     }
   };
 
@@ -90,7 +109,7 @@ export default function FileUploadModal({ currentImage, device }) {
       <Button
         className={"update-button"}
         onClick={handleOpen}
-        disabled={copying}
+        disabled={copying || flashCopying}
       >
         Update Image
       </Button>
@@ -149,48 +168,59 @@ export default function FileUploadModal({ currentImage, device }) {
           <Button onClick={handleClose}>Close</Button>
         </Modal.Footer>
       </Modal>
-      {uploading ? (
-        <ToastContainer position="middle-center">
-          <Toast bg={"secondary"}>
-            <Toast.Header>
-              <strong>Uploading</strong>
-            </Toast.Header>
-            <Toast.Body>Uploading files, please wait</Toast.Body>
-          </Toast>
-        </ToastContainer>
-      ) : (
-        <></>
-      )}
-      {copying && uploadComplete ? (
-        <ToastContainer position="middle-center">
-          <Toast bg={"secondary"}>
-            <Toast.Header>
-              <strong>Copying</strong>
-            </Toast.Header>
-            <Toast.Body>
-              Copying files, please wait
-              <br />
-              Copying {fileCopying}
-              <br />
-              <ProgressBar now={progress} label={`${progress}%`} />
-            </Toast.Body>
-          </Toast>
-        </ToastContainer>
-      ) : (
-        <></>
-      )}
-      {error ? (
-        <ToastContainer position="middle-center">
-          <Toast bg={"danger"} onClose={() => setError(false)}>
-            <Toast.Header>
-              <strong>Error</strong>
-            </Toast.Header>
-            <Toast.Body>An error occurred, please try again</Toast.Body>
-          </Toast>
-        </ToastContainer>
-      ) : (
-        <></>
-      )}
+
+      <ToastContainer position="middle-center">
+        <Toast bg={"secondary"} show={uploading}>
+          <Toast.Header>
+            <strong>Uploading</strong>
+          </Toast.Header>
+          <Toast.Body>Uploading files, please wait</Toast.Body>
+        </Toast>
+      </ToastContainer>
+
+      <ToastContainer position="middle-center">
+        <Toast bg={"info"} show={flashCopying && device === currentTarget}>
+          <Toast.Header>
+            <strong>Copying</strong>
+          </Toast.Header>
+          <Toast.Body>
+            Copying files to flash, this may take a while
+            <br />
+            Copying {flashCopyFileNum} of 3
+            <br />
+            {flashStage}
+            <ProgressBar now={progress} label={`${progress}%`} />
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
+
+      <ToastContainer position="middle-center">
+        <Toast bg={"info"} show={copying && device === currentTarget}>
+          <Toast.Header>
+            <strong>Copying</strong>
+          </Toast.Header>
+          <Toast.Body>
+            Copying files, please wait
+            <br />
+            Copying {fileCopying}
+            <br />
+            <ProgressBar now={progress} label={`${progress}%`} />
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
+
+      <ToastContainer position="middle-center">
+        <Toast
+          bg={"danger"}
+          onClose={() => setUploadError(false)}
+          show={(uploadError || copyError) && device === currentTarget}
+        >
+          <Toast.Header>
+            <strong>Error</strong>
+          </Toast.Header>
+          <Toast.Body>An error occurred, please try again</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </>
   );
 }

@@ -6,6 +6,7 @@ import pathlib
 from concurrent import futures
 import tempfile
 import shutil
+import hashlib
 
 from pyfdt.pyfdt import *
 
@@ -34,6 +35,10 @@ class LokiUpdateController():
         self.sd_base_path = sd_base_path
         self.backup_base_path = backup_base_path
         
+        self.emmc_dtb_path = self.emmc_base_path + "emmc.dtb"
+        self.sd_dtb_path = self.sd_base_path + "sd.dtb"
+        self.backup_dtb_path = self.backup_base_path + "backup.dtb"
+        
         self.emmc_u_boot_path = self.emmc_base_path + "image.ub"
         self.sd_u_boot_path = self.sd_base_path + "image.ub"
         self.backup_u_boot_path = self.backup_base_path + "image.ub"
@@ -57,6 +62,9 @@ class LokiUpdateController():
         self.flash_time_created = 0
         self.flash_error_occurred = False
         self.flash_error_message = ""
+        self.copying_to_flash = False
+        self.flash_copy_stage = ""
+        self.flash_copy_file_num = 0
         self.get_flash_image_metadata_from_dtb()
         self.emmc_installed_image = self.get_installed_image("emmc")
         self.sd_installed_image = self.get_installed_image("sd")
@@ -96,8 +104,8 @@ class LokiUpdateController():
                     "last_refresh": time.time()
                 },
                 "refresh": (self.get_refresh_flash_image_info, self.set_refresh_flash_image_info),
-                "loading": (lambda: self.flash_loading, None)
-                },
+                "loading": (lambda: self.flash_loading, None),
+            },
             "runtime": {
                 "info": (lambda: self.runtime_installed_image, None),
                 "refresh": (self.get_refresh_runtime_image_info, self.set_refresh_runtime_image_info)
@@ -116,8 +124,11 @@ class LokiUpdateController():
                 "progress": (lambda: self.copy_progress, None),
                 "copy_error": (lambda: self.copy_error, None),
                 "copy_error_message": (lambda: self.copy_error_message, None),
+                "flash_copy_stage": (lambda: self.flash_copy_stage, None),
+                "flash_copying": (lambda: self.copying_to_flash, None),
+                "flash_copying_file_num": (lambda: self.flash_copy_file_num, None),
                 "target": (self.get_copy_target, self.set_copy_target),
-                "checksums": (None, self.set_checksums)
+                "checksums": (self.get_checksums, self.set_checksums)
             }
         })
     
@@ -304,15 +315,7 @@ class LokiUpdateController():
     def get_flash_image_metadata_from_dtb(self):
         self.flash_loading = True
         with tempfile.TemporaryDirectory() as temp_dir:
-            device_list_output = subprocess.run(["lsmtd", "-r"], capture_output=True, text=True, check=True)
-            device_list = device_list_output.stdout.splitlines()
-            
-            for line in device_list:
-                if "kernel" in line:
-                    label = line.split()[0]
-                    break
-            
-            kernel_mtddev = "/dev/" + label
+            kernel_mtddev = self.mtd_label_to_device("kernel")
             
             u_boot_path = temp_dir + "/image.ub"
             dtb_path = temp_dir + "/system.dtb"
@@ -396,15 +399,28 @@ class LokiUpdateController():
         if process.returncode != 0:
             raise Exception(process.stderr.strip())
     
+    def mtd_label_to_device(self, label):
+        try:
+            device_list_output = subprocess.run(["lsmtd", "-r"], capture_output=True, text=True, check=True)
+            
+        except subprocess.CalledProcessError as error:
+            logging.error(f"An error occurred while running: {error.cmd}")
+            
+        device_list = device_list_output.stdout.splitlines()
+        
+        for line in device_list:
+            if label in line:
+                label = line.split()[0]
+                break
+        
+        return "/dev/" + label
+    
     def upload_file(self, files):
-        #target = self.get_copy_target()
-        target = "emmc"
+        target = self.get_copy_target()
         if target == "emmc":
             base_path = self.emmc_base_path
         elif target == "sd":
             base_path = self.sd_base_path
-        elif target == "backup":
-            base_path = self.backup_base_path
         
         temp_dir = f"/tmp/{target}"
         
@@ -419,6 +435,7 @@ class LokiUpdateController():
                 out_file.write(file["body"])
         
         self.copy_all_files(temp_dir, base_path, file_names)
+        
         
     @run_on_executor
     def copy_all_files(self, temp_dir, base_path, file_names):
@@ -460,11 +477,45 @@ class LokiUpdateController():
             total_copied += len(buf)
             self.copy_progress = round((total_copied / total) * 100, 1)
     
+    @run_on_executor
+    def copy_to_flash(self, temp_dir, file_names):
+        self.copying_to_flash = True
+        self.flash_copy_file_num = 1
+        
+        for file in file_names:
+            file_extension = file.partition(".")[2]
+            src_path = temp_dir + file
+            
+            try:
+                if file_extension == "ub":
+                    process = subprocess.Popen(["flashcp", "-v", src_path, self.mtd_label_to_device("kernel")], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+                elif file_extension == "BIN" or file_extension == "bin":
+                    process = subprocess.Popen(["flashcp", "-v", src_path, self.mtd_label_to_device("boot")], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+                elif file_extension == "scr":
+                    process = subprocess.Popen(["flashcp", "-v", src_path, self.mtd_label_to_device("bootscr")], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+                
+                for line in process.stdout:
+                    self.flash_copy_stage = line.split(": ")[0]
+                    self.copy_progress = int(line.split("(")[1].replace("%)", ""))
+            
+                self.flash_copy_file_num += 1
+        
+            except subprocess.CalledProcessError as error:
+                logging.error(error.stderr)
+            
+            except Exception as error:
+                logging.error(error)
+                
+        self.copying_to_flash = False
+    
     def get_copy_target(self):
         return self.copy_target
     
     def set_copy_target(self, target):
         self.copy_target = target
-        
+    
+    def get_checksums(self):
+        return self.checksums
+    
     def set_checksums(self, checksums):
         self.checksums = checksums

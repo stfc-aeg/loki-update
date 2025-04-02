@@ -99,7 +99,7 @@ class LokiUpdateAdapter(ApiAdapter):
             response = {'error': str(e)}
             status_code = 400
         except (TypeError, ValueError) as e:
-            response = {'error': 'Failed to decode PUT request body: {}'.format(str(e))}
+            response = {'error': 'Failed to decode POST request body: {}'.format(str(e))}
             status_code = 400
 
         logging.debug(response)

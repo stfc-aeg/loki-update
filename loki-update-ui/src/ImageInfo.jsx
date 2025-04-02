@@ -10,26 +10,24 @@ import ImageInfoCard from "./ImageInfoCard";
 export default function ImageInfo() {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://127.0.0.1:8888",
+    "http://192.168.0.194:8888",
     1000
   );
 
   const EndpointButton = WithEndpoint(Button);
 
-  let flashLoading = endpoint?.data?.installed_images?.flash?.loading;
-
-  let installed_emmc_image = endpoint?.data?.installed_images?.emmc;
-  let installed_sd_image = endpoint?.data?.installed_images?.sd;
-  let installed_backup_image = endpoint?.data?.installed_images?.backup;
-  let installed_flash_image = endpoint?.data?.installed_images?.flash;
-  let installed_runtime_image = endpoint?.data?.installed_images?.runtime;
+  let installedEmmcImage = endpoint?.data?.installed_images?.emmc;
+  let installedSdImage = endpoint?.data?.installed_images?.sd;
+  let installedBackupImage = endpoint?.data?.installed_images?.backup;
+  let installedFlashImage = endpoint?.data?.installed_images?.flash;
+  let installedRuntimeImage = endpoint?.data?.installed_images?.runtime;
 
   const checkIdenticalPrimaryImages = () => {
     return (
-      installed_emmc_image?.info?.app_name ===
-        installed_runtime_image?.info?.app_name &&
-      installed_emmc_image?.info?.app_version ===
-        installed_runtime_image?.info?.app_version
+      installedEmmcImage?.info?.app_name ===
+        installedRuntimeImage?.info?.app_name &&
+      installedEmmcImage?.info?.app_version ===
+        installedRuntimeImage?.info?.app_version
     );
   };
 
@@ -49,7 +47,7 @@ export default function ImageInfo() {
               <Row>
                 <Col>
                   <ImageInfoCard
-                    installed_image={installed_emmc_image}
+                    installed_image={installedEmmcImage}
                     title="Installed Image in eMMC"
                     device="emmc"
                   />
@@ -59,7 +57,7 @@ export default function ImageInfo() {
                 ) : (
                   <Col>
                     <ImageInfoCard
-                      installed_image={installed_runtime_image}
+                      installed_image={installedRuntimeImage}
                       title="Installed Image in Runtime"
                       device="runtime"
                     />
@@ -76,21 +74,21 @@ export default function ImageInfo() {
               <Row>
                 <Col>
                   <ImageInfoCard
-                    installed_image={installed_flash_image}
+                    installed_image={installedFlashImage}
                     title="Installed Image in Flash"
                     device="flash"
                   />
                 </Col>
                 <Col>
                   <ImageInfoCard
-                    installed_image={installed_backup_image}
+                    installed_image={installedBackupImage}
                     title="Installed Image in Backup"
                     device="backup"
                   />
                 </Col>
                 <Col>
                   <ImageInfoCard
-                    installed_image={installed_sd_image}
+                    installed_image={installedSdImage}
                     title="Installed Image in SD"
                     device="sd"
                   />
