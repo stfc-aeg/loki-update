@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import Toast from "react-bootstrap/Toast";
@@ -19,10 +19,16 @@ export default function RestoreImageModal() {
   const isCopyingToEmmc = endpoint?.data?.installed_images?.emmc?.restore;
   const isCopying = endpoint?.data?.copy_progress?.copying;
   const isCopyingToFlash = endpoint?.data?.copy_progress?.flash_copying;
+  const restoreSuccess = endpoint?.data?.copy_progress?.restore_success;
 
   const EndpointButton = WithEndpoint(Button);
 
   const [show, setShow] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    setSuccess(restoreSuccess);
+  }, [restoreSuccess]);
 
   return (
     <>
@@ -62,6 +68,7 @@ export default function RestoreImageModal() {
           </Button>
         </Modal.Footer>
       </Modal>
+
       <ToastContainer position="middle-center">
         <Toast bg={"info"} show={isCopyingToEmmc === true}>
           <Toast.Header>
@@ -74,6 +81,19 @@ export default function RestoreImageModal() {
             <br />
             <ProgressBar now={progress} label={`${progress}%`} />
           </Toast.Body>
+        </Toast>
+      </ToastContainer>
+
+      <ToastContainer position="middle-center">
+        <Toast
+          bg={"success"}
+          show={success === true}
+          onClose={() => setSuccess(false)}
+        >
+          <Toast.Header>
+            <strong>Success</strong>
+          </Toast.Header>
+          <Toast.Body>Image successfully restored from backup</Toast.Body>
         </Toast>
       </ToastContainer>
     </>

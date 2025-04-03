@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "react-bootstrap/esm/Button";
 import Modal from "react-bootstrap/esm/Modal";
 import Form from "react-bootstrap/Form";
@@ -25,18 +25,24 @@ export default function FileUploadModal({ currentImage, device }) {
     endpoint?.data?.copy_progress?.flash_copying_file_num;
   const copyError = endpoint?.data?.copy_progress?.copy_error;
   const currentTarget = endpoint?.data?.copy_progress?.target;
+  const copySuccess = endpoint?.data?.copy_progress?.success;
 
   const [show, setShow] = useState(false);
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [uploadError, setUploadError] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleOpen = () => setShow(true);
   const handleClose = () => {
     setShow(false);
     setFiles([]);
   };
+
+  useEffect(() => {
+    setSuccess(copySuccess);
+  }, [copySuccess]);
 
   const handleFileChange = (e) => {
     setFiles([...files, e.target.files[0]]);
@@ -234,6 +240,19 @@ export default function FileUploadModal({ currentImage, device }) {
             <strong>Error</strong>
           </Toast.Header>
           <Toast.Body>An error occurred, please try again</Toast.Body>
+        </Toast>
+      </ToastContainer>
+
+      <ToastContainer position="middle-center">
+        <Toast
+          bg={"success"}
+          show={success === true && device === currentTarget}
+          onClose={() => setSuccess(false)}
+        >
+          <Toast.Header>
+            <strong>Success</strong>
+          </Toast.Header>
+          <Toast.Body>Image successfully updated</Toast.Body>
         </Toast>
       </ToastContainer>
     </>

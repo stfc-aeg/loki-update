@@ -82,6 +82,9 @@ class LokiUpdateController():
         self.copy_error_message = ""
         self.copy_target = ""
         self.checksums = []
+        self.copy_success = False
+        self.backup_success = False
+        self.restore_success = False
         
         self.installed_images_tree = ParameterTree({
             "emmc": {
@@ -119,7 +122,6 @@ class LokiUpdateController():
             "refresh_all_image_info": (self.get_refresh_all_image_info, self.set_refresh_all_image_info)
         })
         
-        
         self.param_tree = ParameterTree({
             "loki_update_version": __version__,
             "server_uptime": (self.get_server_uptime, None),
@@ -134,7 +136,10 @@ class LokiUpdateController():
                 "flash_copying": (lambda: self.copying_to_flash, None),
                 "flash_copying_file_num": (lambda: self.flash_copy_file_num, None),
                 "target": (self.get_copy_target, self.set_copy_target),
-                "checksums": (self.get_checksums, self.set_checksums)
+                "checksums": (self.get_checksums, self.set_checksums),
+                "success": (lambda: self.copy_success, None),
+                "backup_success": (lambda: self.backup_success, None),
+                "restore_success": (lambda: self.restore_success, None)
             }
         })
     
@@ -465,6 +470,7 @@ class LokiUpdateController():
         
     @run_on_executor
     def copy_all_files(self, temp_dir, base_path, file_names):
+        self.copy_success = False
         self.copying = True
         try:
             for file in file_names:
@@ -479,6 +485,7 @@ class LokiUpdateController():
             self.copy_error_message = str(error)
             
         self.copying = False
+        self.copy_success = True
         
         target = self.get_copy_target()
         
@@ -515,6 +522,7 @@ class LokiUpdateController():
     def copy_to_flash(self, temp_dir, file_names):
         self.copying_to_flash = True
         self.flash_copy_file_num = 1
+        self.copy_success = False
         
         for file in file_names:
             file_extension = file.partition(".")[2]
@@ -541,6 +549,7 @@ class LokiUpdateController():
                 logging.error(error)
                 
         self.copying_to_flash = False
+        self.copy_success = True
     
     def get_copy_target(self):
         return self.copy_target
@@ -566,6 +575,7 @@ class LokiUpdateController():
     @run_on_executor
     def copy_from_emmc_to_backup(self):
         files_to_copy = ["BOOT.BIN", "boot.scr", "image.ub"]
+        self.backup_success = False
         
         for file in files_to_copy:
             self.file_name_copying = file
@@ -574,6 +584,7 @@ class LokiUpdateController():
             self.copy_file(src_path, dest_path)
         
         self.emmc_backup = False
+        self.backup_success = True
         self.set_refresh_backup_image_info(True)
     
     def get_restore_emmc(self):
@@ -588,6 +599,7 @@ class LokiUpdateController():
     @run_on_executor
     def copy_from_backup_to_emmc(self):
         files_to_copy = ["BOOT.BIN", "boot.scr", "image.ub"]
+        self.restore_success = False
         
         for file in files_to_copy:
             self.file_name_copying = file
@@ -596,4 +608,5 @@ class LokiUpdateController():
             self.copy_file(src_path, dest_path)
         
         self.restore_emmc = False
+        self.restore_success = True
         self.set_refresh_emmc_image_info(True)
