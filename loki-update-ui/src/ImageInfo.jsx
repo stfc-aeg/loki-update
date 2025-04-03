@@ -16,11 +16,11 @@ export default function ImageInfo() {
 
   const EndpointButton = WithEndpoint(Button);
 
-  let installedEmmcImage = endpoint?.data?.installed_images?.emmc;
-  let installedSdImage = endpoint?.data?.installed_images?.sd;
-  let installedBackupImage = endpoint?.data?.installed_images?.backup;
-  let installedFlashImage = endpoint?.data?.installed_images?.flash;
-  let installedRuntimeImage = endpoint?.data?.installed_images?.runtime;
+  const installedEmmcImage = endpoint?.data?.installed_images?.emmc;
+  const installedSdImage = endpoint?.data?.installed_images?.sd;
+  const installedBackupImage = endpoint?.data?.installed_images?.backup;
+  const installedFlashImage = endpoint?.data?.installed_images?.flash;
+  const installedRuntimeImage = endpoint?.data?.installed_images?.runtime;
 
   const checkIdenticalPrimaryImages = () => {
     return (

@@ -5,6 +5,8 @@ import Button from "react-bootstrap/esm/Button";
 import Spinner from "react-bootstrap/Spinner";
 import FileUploadModal from "./FileUploadModal";
 import BackUpImageModal from "./BackUpImageModal";
+import RestoreImageModal from "./RestoreImageModal";
+
 export default function ImageInfoCard({ installed_image, title, device }) {
   const endpoint = useAdapterEndpoint(
     "loki-update",
@@ -14,7 +16,7 @@ export default function ImageInfoCard({ installed_image, title, device }) {
 
   const EndpointButton = WithEndpoint(Button);
 
-  const flashLoading = endpoint?.data?.installed_images?.flash?.loading;
+  const isFlashLoading = endpoint?.data?.installed_images?.flash?.loading;
 
   const getHumanTime = (refreshTime) => {
     return moment.unix(refreshTime).format("DD/MM/YYYY HH:mm:ss");
@@ -22,7 +24,7 @@ export default function ImageInfoCard({ installed_image, title, device }) {
 
   return (
     <TitleCard title={title}>
-      {flashLoading && device === "flash" ? (
+      {isFlashLoading && device === "flash" ? (
         <Spinner animation="border" variant="primary" />
       ) : (
         <>
@@ -69,7 +71,14 @@ export default function ImageInfoCard({ installed_image, title, device }) {
                 device={device}
               />
             )}
-            {device === "emmc" ? <BackUpImageModal /> : <></>}
+            {device === "emmc" ? (
+              <>
+                <BackUpImageModal />
+                <RestoreImageModal />
+              </>
+            ) : (
+              <></>
+            )}
           </div>
         </>
       )}

@@ -16,10 +16,10 @@ export default function FileUploadModal({ currentImage, device }) {
     1000
   );
 
-  const copying = endpoint?.data?.copy_progress?.copying;
+  const isCopying = endpoint?.data?.copy_progress?.copying;
   const progress = endpoint?.data?.copy_progress?.progress;
   const fileCopying = endpoint?.data?.copy_progress?.file_name;
-  const flashCopying = endpoint?.data?.copy_progress?.flash_copying;
+  const isFlashCopying = endpoint?.data?.copy_progress?.flash_copying;
   const flashStage = endpoint?.data?.copy_progress?.flash_copy_stage;
   const flashCopyFileNum =
     endpoint?.data?.copy_progress?.flash_copying_file_num;
@@ -114,7 +114,7 @@ export default function FileUploadModal({ currentImage, device }) {
       <Button
         className={"card-button"}
         onClick={handleOpen}
-        disabled={copying || flashCopying}
+        disabled={isCopying || isFlashCopying}
       >
         Update Image
       </Button>
@@ -184,7 +184,7 @@ export default function FileUploadModal({ currentImage, device }) {
       </ToastContainer>
 
       <ToastContainer position="middle-center">
-        <Toast bg={"info"} show={flashCopying && device === currentTarget}>
+        <Toast bg={"info"} show={isFlashCopying === true && device === "flash"}>
           <Toast.Header>
             <strong>Copying</strong>
           </Toast.Header>
@@ -200,7 +200,14 @@ export default function FileUploadModal({ currentImage, device }) {
       </ToastContainer>
 
       <ToastContainer position="middle-center">
-        <Toast bg={"info"} show={copying && device === currentTarget}>
+        <Toast
+          bg={"info"}
+          show={
+            isCopying === true &&
+            device === currentTarget &&
+            uploadComplete === true
+          }
+        >
           <Toast.Header>
             <strong>Copying</strong>
           </Toast.Header>
@@ -218,7 +225,10 @@ export default function FileUploadModal({ currentImage, device }) {
         <Toast
           bg={"danger"}
           onClose={() => setUploadError(false)}
-          show={(uploadError || copyError) && device === currentTarget}
+          show={
+            (uploadError === true || copyError === true) &&
+            device === currentTarget
+          }
         >
           <Toast.Header>
             <strong>Error</strong>

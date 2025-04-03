@@ -73,6 +73,7 @@ class LokiUpdateController():
         self.runtime_installed_image = self.get_installed_image("runtime")
         
         self.emmc_backup = False
+        self.restore_emmc = False
         
         self.copying = False
         self.file_name_copying = ""
@@ -86,7 +87,8 @@ class LokiUpdateController():
             "emmc": {
                 "info": (lambda: self.emmc_installed_image, None),
                 "refresh": (self.get_refresh_emmc_image_info, self.set_refresh_emmc_image_info),
-                "backup": (self.get_emmc_backup, self.set_emmc_backup)
+                "backup": (self.get_emmc_backup, self.set_emmc_backup),
+                "restore": (self.get_restore_emmc, self.set_restore_emmc)
                 },
             "sd": {
                 "info": (lambda: self.sd_installed_image, None),
@@ -477,6 +479,14 @@ class LokiUpdateController():
             self.copy_error_message = str(error)
             
         self.copying = False
+        
+        target = self.get_copy_target()
+        
+        if target == "emmc":
+            self.set_refresh_emmc_image_info(True)
+            
+        elif target == "sd":
+            self.set_refresh_sd_image_info(True)
     
     def copy_file(self, src, dest):
         src_path = pathlib.Path(src)
@@ -565,3 +575,25 @@ class LokiUpdateController():
         
         self.emmc_backup = False
         self.set_refresh_backup_image_info(True)
+    
+    def get_restore_emmc(self):
+        return self.restore_emmc
+
+    def set_restore_emmc(self, restore):
+        self.restore_emmc = bool(restore)
+        
+        if self.restore_emmc:
+            self.copy_from_backup_to_emmc()
+    
+    @run_on_executor
+    def copy_from_backup_to_emmc(self):
+        files_to_copy = ["BOOT.BIN", "boot.scr", "image.ub"]
+        
+        for file in files_to_copy:
+            self.file_name_copying = file
+            src_path = self.backup_base_path + file
+            dest_path = self.emmc_base_path + file
+            self.copy_file(src_path, dest_path)
+        
+        self.restore_emmc = False
+        self.set_refresh_emmc_image_info(True)
