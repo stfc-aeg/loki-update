@@ -22,9 +22,10 @@ class LokiUpdateAdapter(ApiAdapter):
         emmc_base_path = str(self.options.get("emmc_base_path"))
         sd_base_path = str(self.options.get("sd_base_path"))
         backup_base_path = str(self.options.get("backup_base_path"))
-        allow_reboot = bool(self.options.get("allow_reboot"))
+        allow_reboot = eval(self.options.get("allow_reboot"))
+        allow_only_emmc_upload = eval(self.options.get("allow_only_emmc_upload"))
         
-        self.controller = LokiUpdateController(emmc_base_path, sd_base_path, backup_base_path, allow_reboot)
+        self.controller = LokiUpdateController(emmc_base_path, sd_base_path, backup_base_path, allow_reboot, allow_only_emmc_upload)
         
         logging.debug("LokiUpdateAdapter loaded")
         

@@ -22,7 +22,7 @@ export default function ImageInfo() {
   const installedBackupImage = endpoint?.data?.installed_images?.backup;
   const installedFlashImage = endpoint?.data?.installed_images?.flash;
   const installedRuntimeImage = endpoint?.data?.installed_images?.runtime;
-  const isRebootAllowed = endpoint?.data?.reboot_board?.allow_reboot;
+  const isRebootAllowed = endpoint?.data?.restrictions?.allow_reboot;
 
   const checkIdenticalPrimaryImages = () => {
     return (

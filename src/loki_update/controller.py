@@ -29,17 +29,18 @@ class LokiUpdateController():
     # Thread executor for background tasks
     executor = futures.ThreadPoolExecutor(max_workers=1)
     
-    def __init__(self, emmc_base_path, sd_base_path, backup_base_path, allow_reboot):
+    def __init__(self, emmc_base_path, sd_base_path, backup_base_path, allow_reboot, allow_only_emmc_upload):
         # Save arguments
         self.emmc_base_path = emmc_base_path
         self.sd_base_path = sd_base_path
         self.backup_base_path = backup_base_path
         self.allow_reboot = allow_reboot
+        self.allow_only_emmc_upload = allow_only_emmc_upload
         
+        # Set paths
         self.emmc_dtb_path = self.emmc_base_path + "emmc.dtb"
         self.sd_dtb_path = self.sd_base_path + "sd.dtb"
         self.backup_dtb_path = self.backup_base_path + "backup.dtb"
-        
         self.emmc_u_boot_path = self.emmc_base_path + "image.ub"
         self.sd_u_boot_path = self.sd_base_path + "image.ub"
         self.backup_u_boot_path = self.backup_base_path + "image.ub"
@@ -146,9 +147,12 @@ class LokiUpdateController():
                 "restore_success": (lambda: self.restore_success, None)
             },
             "reboot_board": {
-                "allow_reboot": (lambda: self.allow_reboot, None),
                 "reboot": (None, self.set_reboot),
                 "is_rebooting": (lambda: self.is_rebooting, None)
+            },
+            "restrictions": {
+                "allow_reboot": (lambda: self.allow_reboot, None),
+                "allow_only_emmc_upload": (lambda: self.allow_only_emmc_upload, None)
             }
         })
     
@@ -629,4 +633,3 @@ class LokiUpdateController():
     def reboot_board(self):
         self.is_rebooting = True
         subprocess.run(["reboot"])
-        self.is_rebooting = False
