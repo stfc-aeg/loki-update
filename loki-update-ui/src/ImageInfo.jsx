@@ -1,40 +1,33 @@
 import React from "react";
-import { useAdapterEndpoint, WithEndpoint, TitleCard } from "odin-react";
+import { useAdapterEndpoint, WithEndpoint } from "odin-react";
 import Button from "react-bootstrap/esm/Button";
 import Container from "react-bootstrap/esm/Container";
 import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
 import Accordion from "react-bootstrap/esm/Accordion";
-import Spinner from "react-bootstrap/Spinner";
-import moment from "moment";
+import ImageInfoCard from "./ImageInfoCard";
 
 export default function ImageInfo() {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://127.0.0.1:8888",
+    "http://192.168.0.194:8888",
     1000
   );
 
   const EndpointButton = WithEndpoint(Button);
 
-  let flashLoading = endpoint?.data?.installed_images?.flash?.loading;
-
-  let installed_emmc_image = endpoint?.data?.installed_images?.emmc;
-  let installed_sd_image = endpoint?.data?.installed_images?.sd;
-  let installed_backup_image = endpoint?.data?.installed_images?.backup;
-  let installed_flash_image = endpoint?.data?.installed_images?.flash;
-  let installed_runtime_image = endpoint?.data?.installed_images?.runtime;
-
-  const getHumanTime = (refreshTime) => {
-    return moment.unix(refreshTime).format("DD/MM/YYYY HH:mm:ss");
-  };
+  const installedEmmcImage = endpoint?.data?.installed_images?.emmc;
+  const installedSdImage = endpoint?.data?.installed_images?.sd;
+  const installedBackupImage = endpoint?.data?.installed_images?.backup;
+  const installedFlashImage = endpoint?.data?.installed_images?.flash;
+  const installedRuntimeImage = endpoint?.data?.installed_images?.runtime;
 
   const checkIdenticalPrimaryImages = () => {
     return (
-      installed_emmc_image?.info?.app_name ===
-        installed_runtime_image?.info?.app_name &&
-      installed_emmc_image?.info?.app_version ===
-        installed_runtime_image?.info?.app_version
+      installedEmmcImage?.info?.app_name ===
+        installedRuntimeImage?.info?.app_name &&
+      installedEmmcImage?.info?.app_version ===
+        installedRuntimeImage?.info?.app_version
     );
   };
 
@@ -53,91 +46,21 @@ export default function ImageInfo() {
             <Container>
               <Row>
                 <Col>
-                  <TitleCard title="Installed Image in eMMC">
-                    {!installed_emmc_image?.info?.error_occurred ? (
-                      <>
-                        <p>
-                          <strong>App Name:</strong>{" "}
-                          {installed_emmc_image?.info?.app_name}
-                        </p>
-                        <p>
-                          <strong>App Version:</strong>{" "}
-                          {installed_emmc_image?.info?.app_version}
-                        </p>
-                        <p>
-                          <strong>Platform:</strong>{" "}
-                          {installed_emmc_image?.info?.platform}
-                        </p>
-                        <p>
-                          <strong>Created:</strong>{" "}
-                          {getHumanTime(installed_emmc_image?.info?.time)}
-                        </p>
-                      </>
-                    ) : (
-                      <p>
-                        <strong>Error:</strong>{" "}
-                        {installed_emmc_image?.info?.error_message}
-                      </p>
-                    )}
-                    <p>
-                      <strong>Last Refresh:</strong>{" "}
-                      {getHumanTime(installed_emmc_image?.info?.last_refresh)}
-                    </p>
-                    <div>
-                      <EndpointButton
-                        endpoint={endpoint}
-                        event_type="click"
-                        fullpath="installed_images/emmc/refresh"
-                        value={true}
-                      >
-                        Refresh
-                      </EndpointButton>
-                    </div>
-                  </TitleCard>
+                  <ImageInfoCard
+                    installed_image={installedEmmcImage}
+                    title="Installed Image in eMMC"
+                    device="emmc"
+                  />
                 </Col>
                 {checkIdenticalPrimaryImages ? (
                   <></>
                 ) : (
                   <Col>
-                    <TitleCard title="Installed Image in Runtime">
-                      {!installed_runtime_image?.info?.error_occurred ? (
-                        <>
-                          <p>
-                            <strong>App Name:</strong>{" "}
-                            {installed_runtime_image?.info?.app_name}
-                          </p>
-                          <p>
-                            <strong>App Version:</strong>{" "}
-                            {installed_runtime_image?.info?.app_version}
-                          </p>
-                          <p>
-                            <strong>Platform:</strong>{" "}
-                            {installed_runtime_image?.info?.platform}
-                          </p>
-                        </>
-                      ) : (
-                        <p>
-                          <strong>Error:</strong>{" "}
-                          {installed_runtime_image?.info?.error_message}
-                        </p>
-                      )}
-                      <p>
-                        <strong>Last Refresh:</strong>{" "}
-                        {getHumanTime(
-                          installed_runtime_image?.info?.last_refresh
-                        )}
-                      </p>
-                      <div>
-                        <EndpointButton
-                          endpoint={endpoint}
-                          event_type="click"
-                          fullpath="installed_images/runtime/refresh"
-                          value={true}
-                        >
-                          Refresh
-                        </EndpointButton>
-                      </div>
-                    </TitleCard>
+                    <ImageInfoCard
+                      installed_image={installedRuntimeImage}
+                      title="Installed Image in Runtime"
+                      device="runtime"
+                    />
                   </Col>
                 )}
               </Row>
@@ -150,141 +73,25 @@ export default function ImageInfo() {
             <Container>
               <Row>
                 <Col>
-                  <TitleCard title="Installed Image in Flash (Recovery)">
-                    {flashLoading ? (
-                      <Spinner animation="border" variant="primary" />
-                    ) : (
-                      <>
-                        {!installed_flash_image?.info?.error_occurred ? (
-                          <>
-                            <p>
-                              <strong>App Name:</strong>{" "}
-                              {installed_flash_image?.info?.app_name}
-                            </p>
-                            <p>
-                              <strong>App Version:</strong>{" "}
-                              {installed_flash_image?.info?.app_version}
-                            </p>
-                            <p>
-                              <strong>Platform:</strong>{" "}
-                              {installed_flash_image?.info?.platform}
-                            </p>
-                            <p>
-                              <strong>Created:</strong>{" "}
-                              {getHumanTime(installed_flash_image?.info?.time)}
-                            </p>
-                          </>
-                        ) : (
-                          <p>
-                            <strong>Error:</strong>{" "}
-                            {installed_flash_image?.info?.error_message}
-                          </p>
-                        )}
-                        <p>
-                          <strong>Last Refresh:</strong>{" "}
-                          {getHumanTime(
-                            installed_flash_image?.info?.last_refresh
-                          )}
-                        </p>
-                        <div>
-                          <EndpointButton
-                            endpoint={endpoint}
-                            event_type="click"
-                            fullpath="installed_images/flash/refresh"
-                            value={true}
-                          >
-                            Refresh
-                          </EndpointButton>
-                        </div>
-                      </>
-                    )}
-                  </TitleCard>
+                  <ImageInfoCard
+                    installed_image={installedFlashImage}
+                    title="Installed Image in Flash"
+                    device="flash"
+                  />
                 </Col>
                 <Col>
-                  <TitleCard title="Installed Image in Backup">
-                    {!installed_backup_image?.info?.error_occurred ? (
-                      <>
-                        <p>
-                          <strong>App Name:</strong>{" "}
-                          {installed_backup_image?.info?.app_name}
-                        </p>
-                        <p>
-                          <strong>App Version:</strong>{" "}
-                          {installed_backup_image?.info?.app_version}
-                        </p>
-                        <p>
-                          <strong>Platform:</strong>{" "}
-                          {installed_backup_image?.info?.platform}
-                        </p>
-                        <p>
-                          <strong>Created:</strong>{" "}
-                          {getHumanTime(installed_backup_image?.info?.time)}
-                        </p>
-                      </>
-                    ) : (
-                      <p>
-                        <strong>Error:</strong>{" "}
-                        {installed_backup_image.info?.error_message}
-                      </p>
-                    )}
-                    <p>
-                      <strong>Last Refresh:</strong>{" "}
-                      {getHumanTime(installed_backup_image?.info?.last_refresh)}
-                    </p>
-                    <div>
-                      <EndpointButton
-                        endpoint={endpoint}
-                        event_type="click"
-                        fullpath="installed_images/backup/refresh"
-                        value={true}
-                      >
-                        Refresh
-                      </EndpointButton>
-                    </div>
-                  </TitleCard>
+                  <ImageInfoCard
+                    installed_image={installedBackupImage}
+                    title="Installed Image in Backup"
+                    device="backup"
+                  />
                 </Col>
                 <Col>
-                  <TitleCard title="Installed Image in SD">
-                    {!installed_sd_image?.info?.error_occurred ? (
-                      <>
-                        <p>
-                          <strong>App Name:</strong>{" "}
-                          {installed_sd_image?.info?.app_name}
-                        </p>
-                        <p>
-                          <strong>App Version:</strong>{" "}
-                          {installed_sd_image?.info?.app_version}
-                        </p>
-                        <p>
-                          <strong>Platform:</strong>{" "}
-                          {installed_sd_image?.info?.platform}
-                        </p>
-                        <p>
-                          <strong>Created:</strong>{" "}
-                          {getHumanTime(installed_sd_image?.info?.time)}
-                        </p>
-                      </>
-                    ) : (
-                      <p>
-                        <strong>Error:</strong>{" "}
-                        {installed_sd_image?.info?.error_message}
-                      </p>
-                    )}
-                    <p>
-                      <strong>Last Refresh:</strong>{" "}
-                      {getHumanTime(installed_sd_image?.info?.last_refresh)}
-                    </p>
-                    <div>
-                      <EndpointButton
-                        endpoint={endpoint}
-                        event_type="click"
-                        fullpath="installed_images/sd/refresh"
-                        value={true}
-                      >
-                        Refresh
-                      </EndpointButton>
-                    </div>
-                  </TitleCard>
+                  <ImageInfoCard
+                    installed_image={installedSdImage}
+                    title="Installed Image in SD"
+                    device="sd"
+                  />
                 </Col>
               </Row>
             </Container>

@@ -18,7 +18,12 @@ class LokiUpdateAdapter(ApiAdapter):
         """
         super(LokiUpdateAdapter, self).__init__(**kwargs)
         
-        self.controller = LokiUpdateController()
+        # Parse options
+        emmc_base_path = str(self.options.get("emmc_base_path", "/mnt/emmc/"))
+        sd_base_path = str(self.options.get("sd_base_path", "/mnt/sd/"))
+        backup_base_path = str(self.options.get("backup_base_path", "/mnt/emmc/backup/"))
+        
+        self.controller = LokiUpdateController(emmc_base_path, sd_base_path, backup_base_path)
         
         logging.debug("LokiUpdateAdapter loaded")
         
@@ -74,6 +79,32 @@ class LokiUpdateAdapter(ApiAdapter):
 
         return ApiAdapterResponse(response, content_type=content_type,
                                   status_code=status_code)
+        
+    def post(self, path, request):
+        """Handle an HTTP POST request.
+
+        This method handles an HTTP POST request, returning a JSON response.
+
+        :return: ApiAdapterResponse object containing the appropriate response
+        """
+        
+        content_type = "application/json"
+        
+        try:
+            self.controller.upload_file(request.files["file"])
+            
+            response = {"ok": "Files uploaded"}
+            status_code = 200
+        except LokiUpdateError as e:
+            response = {'error': str(e)}
+            status_code = 400
+        except (TypeError, ValueError) as e:
+            response = {'error': 'Failed to decode POST request body: {}'.format(str(e))}
+            status_code = 400
+
+        logging.debug(response)
+        
+        return ApiAdapterResponse(response, content_type=content_type, status_code=status_code)
 
     def delete(self, path, request):
         """Handle an HTTP DELETE request.
