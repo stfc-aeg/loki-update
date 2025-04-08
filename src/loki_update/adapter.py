@@ -19,9 +19,9 @@ class LokiUpdateAdapter(ApiAdapter):
         super(LokiUpdateAdapter, self).__init__(**kwargs)
         
         # Parse options
-        emmc_base_path = str(self.options.get("emmc_base_path"))
-        sd_base_path = str(self.options.get("sd_base_path"))
-        backup_base_path = str(self.options.get("backup_base_path"))
+        emmc_base_path = str(self.options.get("emmc_base_path", "/mnt/emmc/"))
+        sd_base_path = str(self.options.get("sd_base_path", "/mnt/sd/"))
+        backup_base_path = str(self.options.get("backup_base_path", "/mnt/emmc/backup/"))
         
         self.controller = LokiUpdateController(emmc_base_path, sd_base_path, backup_base_path)
         
