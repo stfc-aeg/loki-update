@@ -18,7 +18,7 @@ export default function RebootBoardModal() {
   const isRebooting = endpoint?.data?.reboot_board?.is_rebooting;
 
   const [show, setShow] = useState(false);
-  const [rebooting, setRebooting] = useState(isRebooting);
+  const [rebooting, setRebooting] = useState(false);
 
   const handleReboot = () => {
     setShow(false);
