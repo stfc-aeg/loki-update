@@ -19,9 +19,9 @@ class LokiUpdateAdapter(ApiAdapter):
         super(LokiUpdateAdapter, self).__init__(**kwargs)
         
         # Parse options
-        emmc_base_path = str(self.options.get("emmc_base_path"))
-        sd_base_path = str(self.options.get("sd_base_path"))
-        backup_base_path = str(self.options.get("backup_base_path"))
+        emmc_base_path = str(self.options.get("emmc_base_path", "/mnt/emmc/"))
+        sd_base_path = str(self.options.get("sd_base_path", "/mnt/sd/"))
+        backup_base_path = str(self.options.get("backup_base_path", "/mnt/emmc/backup/"))
         allow_reboot = eval(self.options.get("allow_reboot"))
         allow_only_emmc_upload = eval(self.options.get("allow_only_emmc_upload"))
         
