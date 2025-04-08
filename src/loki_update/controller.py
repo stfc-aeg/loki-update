@@ -35,9 +35,9 @@ class LokiUpdateController():
         self.sd_base_path = sd_base_path
         self.backup_base_path = backup_base_path
         
-        self.emmc_dtb_path = self.emmc_base_path + "emmc.dtb"
-        self.sd_dtb_path = self.sd_base_path + "sd.dtb"
-        self.backup_dtb_path = self.backup_base_path + "backup.dtb"
+        self.emmc_dtb_path = "/tmp/emmc.dtb"
+        self.sd_dtb_path = "/tmp/sd.dtb"
+        self.backup_dtb_path = "/tmp/backup.dtb"
         
         self.emmc_u_boot_path = self.emmc_base_path + "image.ub"
         self.sd_u_boot_path = self.sd_base_path + "image.ub"
