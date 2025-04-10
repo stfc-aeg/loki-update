@@ -12,7 +12,7 @@ import CryptoJS from "crypto-js";
 export default function FileUploadModal({ currentImage, device }) {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888",
+    process.env.REACT_APP_ENDPOINT_URL,
     1000
   );
 
@@ -88,7 +88,8 @@ export default function FileUploadModal({ currentImage, device }) {
 
   const putDevice = async () => {
     await axios.put(
-      "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/target",
+      process.env.REACT_APP_ENDPOINT_URL +
+        "/api/0.1/loki-update/copy_progress/target",
       JSON.stringify(device),
       {
         headers: {
@@ -115,7 +116,8 @@ export default function FileUploadModal({ currentImage, device }) {
       setUploadError(false);
 
       await axios.put(
-        "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/checksums",
+        process.env.REACT_APP_ENDPOINT_URL +
+          "/api/0.1/loki-update/copy_progress/checksums",
         JSON.stringify(checksums),
         {
           headers: {
@@ -127,7 +129,7 @@ export default function FileUploadModal({ currentImage, device }) {
       await putDevice();
 
       await axios.post(
-        "http://192.168.0.194:8888/api/0.1/loki-update",
+        process.env.REACT_APP_ENDPOINT_URL + "/api/0.1/loki-update",
         formData,
         {
           headers: {
@@ -157,7 +159,8 @@ export default function FileUploadModal({ currentImage, device }) {
     await putDevice();
 
     await axios.put(
-      "http://192.168.0.194:8888/api/0.1/loki-update/github_repos/release_to_retrieve",
+      process.env.REACT_APP_ENDPOINT_URL +
+        "/api/0.1/loki-update/github_repos/release_to_retrieve",
       JSON.stringify(release),
       {
         headers: {

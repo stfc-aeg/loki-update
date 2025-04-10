@@ -10,7 +10,7 @@ import RestoreImageModal from "./RestoreImageModal";
 export default function ImageInfoCard({ installed_image, title, device }) {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888",
+    process.env.REACT_APP_ENDPOINT_URL,
     1000
   );
 
