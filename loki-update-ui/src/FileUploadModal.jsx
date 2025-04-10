@@ -28,6 +28,8 @@ export default function FileUploadModal({ currentImage, device }) {
   const copySuccess = endpoint?.data?.copy_progress?.success;
   const repos = endpoint?.data?.github_repos?.repo_info;
   const isDownloading = endpoint?.data?.github_repos?.downloading;
+  const allowImagesFromRepo =
+    endpoint?.data?.restrictions?.allow_images_from_repo;
 
   const defaultRepo = device === "flash" ? "loki" : "";
 
@@ -84,6 +86,18 @@ export default function FileUploadModal({ currentImage, device }) {
     return checksumObject;
   };
 
+  const putDevice = async () => {
+    await axios.put(
+      "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/target",
+      JSON.stringify(device),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     handleClose();
@@ -110,15 +124,7 @@ export default function FileUploadModal({ currentImage, device }) {
         }
       );
 
-      await axios.put(
-        "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/target",
-        JSON.stringify(device),
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await putDevice();
 
       await axios.post(
         "http://192.168.0.194:8888/api/0.1/loki-update",
@@ -148,15 +154,7 @@ export default function FileUploadModal({ currentImage, device }) {
       tag: tagSelected,
     };
 
-    await axios.put(
-      "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/target",
-      JSON.stringify(device),
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    await putDevice();
 
     await axios.put(
       "http://192.168.0.194:8888/api/0.1/loki-update/github_repos/release_to_retrieve",
@@ -190,28 +188,34 @@ export default function FileUploadModal({ currentImage, device }) {
           <p>Application version: {currentImage?.app_version}</p>
           <p>Platform: {currentImage?.platform}</p>
           <hr />
-          <p>Source of files:</p>
-          <Form>
-            <Form.Group onChange={(e) => setFileInput(e.target.value)}>
-              <Form.Check
-                type="radio"
-                checked={fileInput === "fileSystem"}
-                label="File System"
-                value={"fileSystem"}
-              />
-              <Form.Check
-                type="radio"
-                checked={fileInput === "github"}
-                label="GitHub Repository"
-                value={"github"}
-                onClick={() => {
-                  setRepoSelected(defaultRepo);
-                  setTagSelected("");
-                }}
-              />
-            </Form.Group>
-          </Form>
-          <hr />
+          {allowImagesFromRepo === true ? (
+            <>
+              <p>Source of files:</p>
+              <Form>
+                <Form.Group onChange={(e) => setFileInput(e.target.value)}>
+                  <Form.Check
+                    type="radio"
+                    checked={fileInput === "fileSystem"}
+                    label="File System"
+                    value={"fileSystem"}
+                  />
+                  <Form.Check
+                    type="radio"
+                    checked={fileInput === "github"}
+                    label="GitHub Repository"
+                    value={"github"}
+                    onClick={() => {
+                      setRepoSelected(defaultRepo);
+                      setTagSelected("");
+                    }}
+                  />
+                </Form.Group>
+              </Form>
+              <hr />
+            </>
+          ) : (
+            <></>
+          )}
           {fileInput === "fileSystem" ? (
             <Form onSubmit={handleSubmit}>
               <Form.Group>

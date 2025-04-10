@@ -17,6 +17,7 @@ from odin.adapters.parameter_tree import ParameterTree, ParameterTreeError
 
 from loki_update._version import __version__
 
+GITHUB_REPO_API_URL = "https://api.github.com/repos"
 
 class LokiUpdateError(Exception):
     """
@@ -659,7 +660,7 @@ class LokiUpdateController():
         return repo_info
     
     def get_release_tags_from_repo(self, owner, repo):
-        release_response = requests.get(f"https://api.github.com/repos/{owner}/{repo}/releases")
+        release_response = requests.get(f"{GITHUB_REPO_API_URL}/{owner}/{repo}/releases")
         
         tags = []
         assets_required = {"image.ub", "BOOT.BIN", "boot.scr"}
@@ -682,7 +683,6 @@ class LokiUpdateController():
         
         self.download_release_assets(owner, repo, tag)
     
-    @run_on_executor
     def download_release_assets(self, owner, repo, tag):
         self.downloading = True
         target = self.get_copy_target()
@@ -696,7 +696,7 @@ class LokiUpdateController():
         if not os.path.exists(temp_dir):
             os.mkdir(temp_dir)
             
-        tag_response = requests.get(f"https://api.github.com/repos/{owner}/{repo}/releases/tags/{tag}")
+        tag_response = requests.get(f"{GITHUB_REPO_API_URL}/{owner}/{repo}/releases/tags/{tag}")
         
         if tag_response.status_code != 200:
             raise LokiUpdateError("Unable to fetch release assets from repository")
@@ -718,7 +718,7 @@ class LokiUpdateController():
             
             file_name_list.append(file_name)
             
-            response = requests.get(download_url)
+            response = requests.get(download_url, allow_redirects=True)
             
             if response.status_code == 200:
                 with open(temp_dir + file_name, "wb") as file:
