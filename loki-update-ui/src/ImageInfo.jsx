@@ -77,7 +77,7 @@ export default function ImageInfo() {
                 <Col>
                   <ImageInfoCard
                     installed_image={installedFlashImage}
-                    title="Installed Image in Flash"
+                    title="Installed Image in Flash (Recovery)"
                     device="flash"
                   />
                 </Col>

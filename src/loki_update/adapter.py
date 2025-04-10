@@ -1,4 +1,5 @@
 import logging
+import json
 
 from tornado.escape import json_decode
 
@@ -24,8 +25,10 @@ class LokiUpdateAdapter(ApiAdapter):
         backup_base_path = str(self.options.get("backup_base_path", "/mnt/emmc/backup/"))
         allow_reboot = eval(self.options.get("allow_reboot"))
         allow_only_emmc_upload = eval(self.options.get("allow_only_emmc_upload"))
+        allow_images_from_repo = eval(self.options.get("allow_images_from_repo", False))
+        available_repos = json.loads(self.options.get("available_repos", "[{}]"))
         
-        self.controller = LokiUpdateController(emmc_base_path, sd_base_path, backup_base_path, allow_reboot, allow_only_emmc_upload)
+        self.controller = LokiUpdateController(emmc_base_path, sd_base_path, backup_base_path, allow_reboot, allow_only_emmc_upload, allow_images_from_repo, available_repos)
         
         logging.debug("LokiUpdateAdapter loaded")
         

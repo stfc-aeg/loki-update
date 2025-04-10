@@ -20,8 +20,6 @@ export default function ImageInfoCard({ installed_image, title, device }) {
   const allowOnlyEmmcUpload =
     endpoint?.data?.restrictions?.allow_only_emmc_upload;
 
-  console.log(allowOnlyEmmcUpload);
-
   const getHumanTime = (refreshTime) => {
     return moment.unix(refreshTime).format("DD/MM/YYYY HH:mm:ss");
   };
