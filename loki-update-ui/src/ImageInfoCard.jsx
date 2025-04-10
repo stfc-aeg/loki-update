@@ -17,6 +17,10 @@ export default function ImageInfoCard({ installed_image, title, device }) {
   const EndpointButton = WithEndpoint(Button);
 
   const isFlashLoading = endpoint?.data?.installed_images?.flash?.loading;
+  const allowOnlyEmmcUpload =
+    endpoint?.data?.restrictions?.allow_only_emmc_upload;
+
+  console.log(allowOnlyEmmcUpload);
 
   const getHumanTime = (refreshTime) => {
     return moment.unix(refreshTime).format("DD/MM/YYYY HH:mm:ss");
@@ -63,7 +67,9 @@ export default function ImageInfoCard({ installed_image, title, device }) {
             >
               Refresh
             </EndpointButton>
-            {device === "backup" || device === "runtime" ? (
+            {device === "backup" ||
+            device === "runtime" ||
+            (allowOnlyEmmcUpload === true && device !== "emmc") ? (
               <></>
             ) : (
               <FileUploadModal

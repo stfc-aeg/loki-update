@@ -6,6 +6,7 @@ import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
 import Accordion from "react-bootstrap/esm/Accordion";
 import ImageInfoCard from "./ImageInfoCard";
+import RebootBoardModal from "./RebootBoardModal";
 
 export default function ImageInfo() {
   const endpoint = useAdapterEndpoint(
@@ -21,6 +22,7 @@ export default function ImageInfo() {
   const installedBackupImage = endpoint?.data?.installed_images?.backup;
   const installedFlashImage = endpoint?.data?.installed_images?.flash;
   const installedRuntimeImage = endpoint?.data?.installed_images?.runtime;
+  const isRebootAllowed = endpoint?.data?.restrictions?.allow_reboot;
 
   const checkIdenticalPrimaryImages = () => {
     return (
@@ -107,6 +109,7 @@ export default function ImageInfo() {
       >
         Refresh All
       </EndpointButton>
+      {isRebootAllowed ? <RebootBoardModal /> : <></>}
     </div>
   );
 }

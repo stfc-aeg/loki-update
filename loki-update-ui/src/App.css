@@ -15,3 +15,8 @@
 .toast {
   text-align: center;
 }
+
+.reboot-board-button {
+  margin-top: 1rem;
+  margin-left: 1rem;
+}

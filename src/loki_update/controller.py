@@ -29,11 +29,13 @@ class LokiUpdateController():
     # Thread executor for background tasks
     executor = futures.ThreadPoolExecutor(max_workers=1)
     
-    def __init__(self, emmc_base_path, sd_base_path, backup_base_path):
+    def __init__(self, emmc_base_path, sd_base_path, backup_base_path, allow_reboot, allow_only_emmc_upload):
         # Save arguments
         self.emmc_base_path = emmc_base_path
         self.sd_base_path = sd_base_path
         self.backup_base_path = backup_base_path
+        self.allow_reboot = allow_reboot
+        self.allow_only_emmc_upload = allow_only_emmc_upload
         
         self.emmc_dtb_path = "/tmp/emmc.dtb"
         self.sd_dtb_path = "/tmp/sd.dtb"
@@ -85,6 +87,9 @@ class LokiUpdateController():
         self.copy_success = False
         self.backup_success = False
         self.restore_success = False
+        
+        self.reboot = False
+        self.is_rebooting = False
         
         self.installed_images_tree = ParameterTree({
             "emmc": {
@@ -140,6 +145,14 @@ class LokiUpdateController():
                 "success": (lambda: self.copy_success, None),
                 "backup_success": (lambda: self.backup_success, None),
                 "restore_success": (lambda: self.restore_success, None)
+            },
+            "reboot_board": {
+                "reboot": (None, self.set_reboot),
+                "is_rebooting": (lambda: self.is_rebooting, None)
+            },
+            "restrictions": {
+                "allow_reboot": (lambda: self.allow_reboot, None),
+                "allow_only_emmc_upload": (lambda: self.allow_only_emmc_upload, None)
             }
         })
     
@@ -610,3 +623,13 @@ class LokiUpdateController():
         self.restore_emmc = False
         self.restore_success = True
         self.set_refresh_emmc_image_info(True)
+    
+    def set_reboot(self, reboot):
+        self.reboot = bool(reboot)
+        
+        if self.reboot:
+            self.reboot_board()
+    
+    def reboot_board(self):
+        self.is_rebooting = True
+        subprocess.run(["reboot"])
