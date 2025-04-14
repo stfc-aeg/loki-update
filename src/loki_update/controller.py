@@ -7,6 +7,7 @@ from concurrent import futures
 import tempfile
 import shutil
 import hashlib
+import requests
 
 from pyfdt.pyfdt import *
 
@@ -16,6 +17,7 @@ from odin.adapters.parameter_tree import ParameterTree, ParameterTreeError
 
 from loki_update._version import __version__
 
+GITHUB_REPO_API_URL = "https://api.github.com/repos"
 
 class LokiUpdateError(Exception):
     """
@@ -29,18 +31,22 @@ class LokiUpdateController():
     # Thread executor for background tasks
     executor = futures.ThreadPoolExecutor(max_workers=1)
     
-    def __init__(self, emmc_base_path, sd_base_path, backup_base_path, allow_reboot, allow_only_emmc_upload):
+    def __init__(self, emmc_base_path, sd_base_path, backup_base_path, allow_reboot, allow_only_emmc_upload, allow_images_from_repo, available_repos):
         # Save arguments
         self.emmc_base_path = emmc_base_path
         self.sd_base_path = sd_base_path
         self.backup_base_path = backup_base_path
         self.allow_reboot = allow_reboot
         self.allow_only_emmc_upload = allow_only_emmc_upload
+        self.allow_images_from_repo = allow_images_from_repo
+        self.available_repos = available_repos
         
+        # Set up paths for temporary files
         self.emmc_dtb_path = "/tmp/emmc.dtb"
         self.sd_dtb_path = "/tmp/sd.dtb"
         self.backup_dtb_path = "/tmp/backup.dtb"
         
+        # Set up paths for u-boot images
         self.emmc_u_boot_path = self.emmc_base_path + "image.ub"
         self.sd_u_boot_path = self.sd_base_path + "image.ub"
         self.backup_u_boot_path = self.backup_base_path + "image.ub"
@@ -90,6 +96,10 @@ class LokiUpdateController():
         
         self.reboot = False
         self.is_rebooting = False
+        
+        # Only get repo info once at startup, as GitHub API is rate limited
+        self.repo_info = self.get_repo_info()
+        self.downloading = False
         
         self.installed_images_tree = ParameterTree({
             "emmc": {
@@ -152,7 +162,13 @@ class LokiUpdateController():
             },
             "restrictions": {
                 "allow_reboot": (lambda: self.allow_reboot, None),
-                "allow_only_emmc_upload": (lambda: self.allow_only_emmc_upload, None)
+                "allow_only_emmc_upload": (lambda: self.allow_only_emmc_upload, None),
+                "allow_images_from_repo": (lambda: self.allow_images_from_repo, None)
+            },
+            "github_repos": {
+                "repo_info": (lambda: self.repo_info, None),
+                "release_to_retrieve": (None, self.set_release_to_retrieve),
+                "downloading": (lambda: self.downloading, None),
             }
         })
     
@@ -477,7 +493,6 @@ class LokiUpdateController():
         
         if target == "flash":
             self.copy_to_flash(temp_dir, file_names)
-            self.set_refresh_flash_image_info(True)
         else:
             self.copy_all_files(temp_dir, base_path, file_names)
         
@@ -563,6 +578,7 @@ class LokiUpdateController():
                 
         self.copying_to_flash = False
         self.copy_success = True
+        self.set_refresh_flash_image_info(True)
     
     def get_copy_target(self):
         return self.copy_target
@@ -633,3 +649,87 @@ class LokiUpdateController():
     def reboot_board(self):
         self.is_rebooting = True
         subprocess.run(["reboot"])
+    
+    def get_repo_info(self):
+        repo_info = []
+        
+        for repo in self.available_repos:
+            tags = self.get_release_tags_from_repo(repo.get("owner"), repo.get("name"))
+            repo_info.append({"name": repo.get("name"), "tags": tags})
+        
+        return repo_info
+    
+    def get_release_tags_from_repo(self, owner, repo):
+        release_response = requests.get(f"{GITHUB_REPO_API_URL}/{owner}/{repo}/releases")
+        
+        tags = []
+        assets_required = {"image.ub", "BOOT.BIN", "boot.scr"}
+        
+        if release_response.status_code != 200:
+            raise LokiUpdateError("Unable to fetch releases from repository")
+        
+        for release in release_response.json():
+            if release.get("assets"):
+                assets_available = {asset.get("name") for asset in release.get("assets")}
+                if assets_required.issubset(assets_available):
+                    tags.append(release.get("tag_name"))
+        
+        return tags
+    
+    def set_release_to_retrieve(self, release):
+        repo = release.get("repo")
+        tag = release.get("tag")
+        owner = next((item for item in self.available_repos if item.get("name") == repo)).get("owner")
+        
+        self.download_release_assets(owner, repo, tag)
+    
+    def download_release_assets(self, owner, repo, tag):
+        self.downloading = True
+        target = self.get_copy_target()
+        if target == "emmc":
+            base_path = self.emmc_base_path
+        elif target == "sd":
+            base_path = self.sd_base_path
+        
+        temp_dir = f"/tmp/{target}"
+        
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
+            
+        tag_response = requests.get(f"{GITHUB_REPO_API_URL}/{owner}/{repo}/releases/tags/{tag}")
+        
+        if tag_response.status_code != 200:
+            raise LokiUpdateError("Unable to fetch release assets from repository")
+        
+        assets = tag_response.json().get("assets")
+        
+        if not assets:
+            raise LokiUpdateError("No assets found for this release")
+        
+        temp_dir = f"/tmp/{target}/"
+        file_name_list = []
+        
+        for asset in assets:
+            download_url = asset.get("browser_download_url")
+            file_name = asset.get("name")
+            
+            if file_name not in ["image.ub", "BOOT.BIN", "boot.scr"]:
+                continue
+            
+            file_name_list.append(file_name)
+            
+            response = requests.get(download_url, allow_redirects=True)
+            
+            if response.status_code == 200:
+                with open(temp_dir + file_name, "wb") as file:
+                    file.write(response.content)
+            else:
+                raise LokiUpdateError("Unable to download release asset: " + file_name)
+        
+        self.downloading = False
+        
+        if target == "flash":
+            self.copy_to_flash(temp_dir, file_name_list)
+        else:
+            self.copy_all_files(temp_dir, base_path, file_name_list)
+        

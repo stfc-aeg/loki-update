@@ -12,7 +12,7 @@ import CryptoJS from "crypto-js";
 export default function FileUploadModal({ currentImage, device }) {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888",
+    process.env.REACT_APP_ENDPOINT_URL,
     1000
   );
 
@@ -26,6 +26,12 @@ export default function FileUploadModal({ currentImage, device }) {
   const copyError = endpoint?.data?.copy_progress?.copy_error;
   const currentTarget = endpoint?.data?.copy_progress?.target;
   const copySuccess = endpoint?.data?.copy_progress?.success;
+  const repos = endpoint?.data?.github_repos?.repo_info;
+  const isDownloading = endpoint?.data?.github_repos?.downloading;
+  const allowImagesFromRepo =
+    endpoint?.data?.restrictions?.allow_images_from_repo;
+
+  const defaultRepo = device === "flash" ? "loki" : "";
 
   const [show, setShow] = useState(false);
   const [files, setFiles] = useState([]);
@@ -33,12 +39,32 @@ export default function FileUploadModal({ currentImage, device }) {
   const [uploadComplete, setUploadComplete] = useState(false);
   const [uploadError, setUploadError] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [fileInput, setFileInput] = useState("fileSystem");
+  const [repoSelected, setRepoSelected] = useState(defaultRepo);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [tagSelected, setTagSelected] = useState("");
 
-  const handleOpen = () => setShow(true);
+  const handleOpen = () => {
+    setShow(true);
+    setFileInput("fileSystem");
+  };
+
   const handleClose = () => {
     setShow(false);
     setFiles([]);
+    setRepoSelected("");
   };
+
+  useEffect(() => {
+    if (repoSelected && repos) {
+      const selectedRepo = repos.find((repo) => repo.name === repoSelected);
+      if (selectedRepo) {
+        setAvailableTags(selectedRepo.tags);
+      }
+    } else {
+      setAvailableTags([]);
+    }
+  }, [repoSelected, repos]);
 
   useEffect(() => {
     setSuccess(copySuccess);
@@ -60,6 +86,19 @@ export default function FileUploadModal({ currentImage, device }) {
     return checksumObject;
   };
 
+  const putDevice = async () => {
+    await axios.put(
+      process.env.REACT_APP_ENDPOINT_URL +
+        "/api/0.1/loki-update/copy_progress/target",
+      JSON.stringify(device),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     handleClose();
@@ -77,7 +116,8 @@ export default function FileUploadModal({ currentImage, device }) {
       setUploadError(false);
 
       await axios.put(
-        "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/checksums",
+        process.env.REACT_APP_ENDPOINT_URL +
+          "/api/0.1/loki-update/copy_progress/checksums",
         JSON.stringify(checksums),
         {
           headers: {
@@ -86,18 +126,10 @@ export default function FileUploadModal({ currentImage, device }) {
         }
       );
 
-      await axios.put(
-        "http://192.168.0.194:8888/api/0.1/loki-update/copy_progress/target",
-        JSON.stringify(device),
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await putDevice();
 
       await axios.post(
-        "http://192.168.0.194:8888/api/0.1/loki-update",
+        process.env.REACT_APP_ENDPOINT_URL + "/api/0.1/loki-update",
         formData,
         {
           headers: {
@@ -113,6 +145,29 @@ export default function FileUploadModal({ currentImage, device }) {
       setUploading(false);
       setUploadError(true);
     }
+  };
+
+  const handleRepoSubmit = async (e) => {
+    e.preventDefault();
+    handleClose();
+
+    const release = {
+      repo: repoSelected,
+      tag: tagSelected,
+    };
+
+    await putDevice();
+
+    await axios.put(
+      process.env.REACT_APP_ENDPOINT_URL +
+        "/api/0.1/loki-update/github_repos/release_to_retrieve",
+      JSON.stringify(release),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
   };
 
   return (
@@ -136,44 +191,125 @@ export default function FileUploadModal({ currentImage, device }) {
           <p>Application version: {currentImage?.app_version}</p>
           <p>Platform: {currentImage?.platform}</p>
           <hr />
-          <Form onSubmit={handleSubmit}>
-            <Form.Group>
-              <Form.Label>Select BOOT.BIN file</Form.Label>
-              <Form.Control
-                id="bootBinFile"
-                type="file"
-                name="file"
-                accept=".BIN"
-                onChange={handleFileChange}
-              />
-            </Form.Group>
-            <hr />
-            <Form.Group>
-              <Form.Label>Select boot.scr file</Form.Label>
-              <Form.Control
-                id="bootScrFile"
-                type="file"
-                name="file"
-                accept=".scr"
-                onChange={handleFileChange}
-              />
-            </Form.Group>
-            <hr />
-            <Form.Group>
-              <Form.Label>Select image.ub file</Form.Label>
-              <Form.Control
-                id="imageFile"
-                type="file"
-                name="file"
-                accept=".ub"
-                onChange={handleFileChange}
-              />
-            </Form.Group>
-            <hr />
-            <Button type="submit" disabled={files.length !== 3}>
-              Upload Files
-            </Button>
-          </Form>
+          {allowImagesFromRepo === true ? (
+            <>
+              <p>Source of files:</p>
+              <Form>
+                <Form.Group onChange={(e) => setFileInput(e.target.value)}>
+                  <Form.Check
+                    type="radio"
+                    checked={fileInput === "fileSystem"}
+                    label="File System"
+                    value={"fileSystem"}
+                  />
+                  <Form.Check
+                    type="radio"
+                    checked={fileInput === "github"}
+                    label="GitHub Repository"
+                    value={"github"}
+                    onClick={() => {
+                      setRepoSelected(defaultRepo);
+                      setTagSelected("");
+                    }}
+                  />
+                </Form.Group>
+              </Form>
+              <hr />
+            </>
+          ) : (
+            <></>
+          )}
+          {fileInput === "fileSystem" ? (
+            <Form onSubmit={handleSubmit}>
+              <Form.Group>
+                <Form.Label>Select BOOT.BIN file</Form.Label>
+                <Form.Control
+                  id="bootBinFile"
+                  type="file"
+                  name="file"
+                  accept=".BIN"
+                  onChange={handleFileChange}
+                />
+              </Form.Group>
+              <hr />
+              <Form.Group>
+                <Form.Label>Select boot.scr file</Form.Label>
+                <Form.Control
+                  id="bootScrFile"
+                  type="file"
+                  name="file"
+                  accept=".scr"
+                  onChange={handleFileChange}
+                />
+              </Form.Group>
+              <hr />
+              <Form.Group>
+                <Form.Label>Select image.ub file</Form.Label>
+                <Form.Control
+                  id="imageFile"
+                  type="file"
+                  name="file"
+                  accept=".ub"
+                  onChange={handleFileChange}
+                />
+              </Form.Group>
+              <hr />
+              <Button type="submit" disabled={files.length !== 3}>
+                Upload Files
+              </Button>
+            </Form>
+          ) : (
+            <Form onSubmit={handleRepoSubmit}>
+              <Form.Group>
+                <Form.Label>Select GitHub Repository</Form.Label>
+                <Form.Select
+                  onChange={(e) => setRepoSelected(e.target.value)}
+                  disabled={device === "flash"}
+                >
+                  {device === "flash" ? (
+                    <>
+                      <option key="loki" value="loki">
+                        loki
+                      </option>
+                    </>
+                  ) : (
+                    <>
+                      <option key="default" value="">
+                        Select a repository
+                      </option>
+                      {repos.map((repo) => (
+                        <option key={repo.name} value={repo.name}>
+                          {repo.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </Form.Select>
+                <hr />
+                <Form.Label>Select Tag</Form.Label>
+                <Form.Select
+                  onChange={(e) => setTagSelected(e.target.value)}
+                  disabled={repoSelected === ""}
+                >
+                  <option key="default" value="">
+                    Select a tag
+                  </option>
+                  {availableTags.map((tag) => (
+                    <option key={tag} value={tag}>
+                      {tag}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+              <hr />
+              <Button
+                type="submit"
+                disabled={repoSelected === "" || tagSelected === ""}
+              >
+                Submit
+              </Button>
+            </Form>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={handleClose}>Close</Button>
@@ -186,6 +322,20 @@ export default function FileUploadModal({ currentImage, device }) {
             <strong>Uploading</strong>
           </Toast.Header>
           <Toast.Body>Uploading files, please wait</Toast.Body>
+        </Toast>
+      </ToastContainer>
+
+      <ToastContainer position="middle-center">
+        <Toast
+          bg={"secondary"}
+          show={isDownloading && device === currentTarget}
+        >
+          <Toast.Header>
+            <strong>Downloading</strong>
+          </Toast.Header>
+          <Toast.Body>
+            Downloading files from repository, please wait
+          </Toast.Body>
         </Toast>
       </ToastContainer>
 

@@ -10,7 +10,7 @@ import RestoreImageModal from "./RestoreImageModal";
 export default function ImageInfoCard({ installed_image, title, device }) {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888",
+    process.env.REACT_APP_ENDPOINT_URL,
     1000
   );
 
@@ -19,8 +19,6 @@ export default function ImageInfoCard({ installed_image, title, device }) {
   const isFlashLoading = endpoint?.data?.installed_images?.flash?.loading;
   const allowOnlyEmmcUpload =
     endpoint?.data?.restrictions?.allow_only_emmc_upload;
-
-  console.log(allowOnlyEmmcUpload);
 
   const getHumanTime = (refreshTime) => {
     return moment.unix(refreshTime).format("DD/MM/YYYY HH:mm:ss");

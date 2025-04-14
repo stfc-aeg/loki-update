@@ -9,7 +9,7 @@ import { useAdapterEndpoint, WithEndpoint } from "odin-react";
 export default function RestoreImageModal() {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888",
+    process.env.REACT_APP_ENDPOINT_URL,
     1000
   );
 

@@ -11,7 +11,7 @@ import RebootBoardModal from "./RebootBoardModal";
 export default function ImageInfo() {
   const endpoint = useAdapterEndpoint(
     "loki-update",
-    "http://192.168.0.194:8888",
+    process.env.REACT_APP_ENDPOINT_URL,
     1000
   );
 
@@ -77,7 +77,7 @@ export default function ImageInfo() {
                 <Col>
                   <ImageInfoCard
                     installed_image={installedFlashImage}
-                    title="Installed Image in Flash"
+                    title="Installed Image in Flash (Recovery)"
                     device="flash"
                   />
                 </Col>
