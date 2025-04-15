@@ -45,12 +45,10 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifactErrorsFailBuild: true
-          artifacts: ./build/build.zip
-
+          artifacts: loki-update-ui/build/build.zip
           draft: true
           generateReleaseNotes: true
           skipIfReleaseExists: true
-
           allowUpdates: true
           updateOnlyUnreleased: true
           omitBodyDuringUpdate: true
