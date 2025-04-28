@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="loki-update",
+    name="loki_update",
     version="0.1.0",
     author="Callum Lee",
     author_email="callum.lee@stfc.ac.uk",

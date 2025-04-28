@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "setuptools_scm[toml]>=7"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "loki-update"
+name = "loki_update"
 classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
