@@ -15,8 +15,6 @@ from tornado.concurrent import run_on_executor
 
 from odin.adapters.parameter_tree import ParameterTree, ParameterTreeError
 
-from loki_update._version import __version__
-
 GITHUB_REPO_API_URL = "https://api.github.com/repos"
 
 class LokiUpdateError(Exception):
@@ -138,7 +136,6 @@ class LokiUpdateController():
         })
         
         self.param_tree = ParameterTree({
-            "loki_update_version": __version__,
             "server_uptime": (self.get_server_uptime, None),
             "installed_images": self.installed_images_tree,
             "copy_progress": {
