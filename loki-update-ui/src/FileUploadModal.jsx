@@ -16,6 +16,8 @@ export default function FileUploadModal({ currentImage, device }) {
     1000
   );
 
+  const adapterEndpointURL = process.env.REACT_APP_ENDPOINT_URL ?? "";
+
   const isCopying = endpoint?.data?.copy_progress?.copying;
   const progress = endpoint?.data?.copy_progress?.progress;
   const fileCopying = endpoint?.data?.copy_progress?.file_name;
@@ -88,8 +90,7 @@ export default function FileUploadModal({ currentImage, device }) {
 
   const putDevice = async () => {
     await axios.put(
-      process.env.REACT_APP_ENDPOINT_URL +
-        "/api/0.1/loki-update/copy_progress/target",
+      adapterEndpointURL + "/api/0.1/loki-update/copy_progress/target",
       JSON.stringify(device),
       {
         headers: {
@@ -116,8 +117,7 @@ export default function FileUploadModal({ currentImage, device }) {
       setUploadError(false);
 
       await axios.put(
-        process.env.REACT_APP_ENDPOINT_URL +
-          "/api/0.1/loki-update/copy_progress/checksums",
+        adapterEndpointURL + "/api/0.1/loki-update/copy_progress/checksums",
         JSON.stringify(checksums),
         {
           headers: {
@@ -128,15 +128,11 @@ export default function FileUploadModal({ currentImage, device }) {
 
       await putDevice();
 
-      await axios.post(
-        process.env.REACT_APP_ENDPOINT_URL + "/api/0.1/loki-update",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await axios.post(adapterEndpointURL + "/api/0.1/loki-update", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       setUploadComplete(true);
       setUploading(false);
