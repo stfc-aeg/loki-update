@@ -319,7 +319,7 @@ class LokiUpdateController():
         
         try:
             # Check if metadata is at the top level
-            metadata_output = subprocess.run(["fdtget", "-p", u_boot_path, "/loki-metadata"], capture_output=True)
+            metadata_output = subprocess.run(["fdtget", "-t", "s", u_boot_path, "/loki-metadata", "loki-version"], capture_output=True)
 
             if metadata_output.returncode == 0:
                 name = subprocess.run(["fdtget", "-t", "s", u_boot_path, "/loki-metadata", "application-name"], capture_output=True, text=True, check=True).stdout.strip()
@@ -368,8 +368,8 @@ class LokiUpdateController():
                 kernel_mtddev = self.mtd_label_to_device("kernel")
 
                 # Check for metadata at the top level first
-                metadata_output = subprocess.run(["fdtget", "-t", "i", kernel_mtddev, "/", "loki-metadata"], capture_output=True)
-                if metadata_output.returncode == 0:  
+                metadata_output = subprocess.run(["fdtget", "-t", "s", kernel_mtddev, "/loki-metadata", "loki-version"], capture_output=True)
+                if metadata_output.returncode == 0:
                     self.flash_app_name = subprocess.run(["fdtget", "-t", "s", kernel_mtddev, "/loki-metadata", "application-name"], capture_output=True, text=True, check=True).stdout.strip()
                     self.flash_app_version = subprocess.run(["fdtget", "-t", "s", kernel_mtddev, "/loki-metadata", "application-version"], capture_output=True, text=True, check=True).stdout.strip()
                     self.flash_loki_version = subprocess.run(["fdtget", "-t", "s", kernel_mtddev, "/loki-metadata", "loki-version"], capture_output=True, text=True, check=True).stdout.strip()
