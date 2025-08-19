@@ -19,7 +19,7 @@ GITHUB_REPO_API_URL = "https://api.github.com/repos"
 
 class LokiUpdateError(Exception):
     """
-    Simple execption class to wrap lower-level exceptions
+    Simple exception class to wrap lower-level exceptions
     """
     
     pass
@@ -59,7 +59,7 @@ class LokiUpdateController():
         self.refresh_flash_image_info = False
         self.refresh_runtime_image_info = False
         
-        # Store inital image info
+        # Store initial image info
         self.flash_loading = True
         self.flash_app_name = ""
         self.flash_app_version = ""
@@ -210,9 +210,9 @@ class LokiUpdateController():
     
     def get_installed_image(self, device):
         if device == "runtime":
-            name, app_version, loki_version, platform, timestamp, error_occured, error_message = self.get_runtime_image_metadata()
+            name, app_version, loki_version, platform, timestamp, error_occurred, error_message = self.get_runtime_image_metadata()
         else:
-            name, app_version, loki_version, platform, timestamp, error_occured, error_message = self.get_image_metadata_from_dtb(device)
+            name, app_version, loki_version, platform, timestamp, error_occurred, error_message = self.get_image_metadata_from_dtb(device)
             
         return {
             "app_name": self.check_empty_info(name),
@@ -220,7 +220,7 @@ class LokiUpdateController():
             "loki_version": self.check_empty_info(loki_version),
             "platform": self.check_empty_info(platform),
             "time": timestamp,
-            "error_occurred": error_occured,
+            "error_occurred": error_occurred,
             "error_message": error_message,
             "last_refresh": time.time()
         }
@@ -301,7 +301,7 @@ class LokiUpdateController():
         loki_version = ""
         platform = ""
         timestamp = ""
-        error_occured = False
+        error_occurred = False
         error_message = ""
         
         if device == "emmc":
@@ -331,22 +331,22 @@ class LokiUpdateController():
             timestamp = timestamp_output.stdout.strip()
         
         except subprocess.CalledProcessError as error:
-            self.flash_error_occured = True
+            self.flash_error_occurred = True
             self.flash_error_message = str(error.stderr)
             logging.error(f"{str(error.cmd)}: {self.flash_error_message}")
         
         except FileNotFoundError as error:
-            error_occured = True
+            error_occurred = True
             error_message = "Unable to create flattened device tree, .dtb file was not found"
             logging.error(error_message)
         
         except Exception as error:
-            error_occured = True
+            error_occurred = True
             error_message = str(error)
             logging.error(str(error))
 
         finally:
-            return name, app_version, loki_version, platform, timestamp, error_occured, error_message
+            return name, app_version, loki_version, platform, timestamp, error_occurred, error_message
     
     @run_on_executor
     def get_flash_image_metadata_from_dtb(self):
@@ -376,17 +376,17 @@ class LokiUpdateController():
                 self.flash_time_created = timestamp_output.stdout.strip()
             
             except subprocess.CalledProcessError as error:
-                self.flash_error_occured = True
+                self.flash_error_occurred = True
                 self.flash_error_message = str(error.stderr)
                 logging.error(f"{str(error.cmd)}: {self.flash_error_message}")
             
             except FileNotFoundError as error:
-                self.flash_error_occured = True
+                self.flash_error_occurred = True
                 self.flash_error_message = "Unable to create flattened device tree, .dtb file was not found"
                 logging.error(self.flash_error_message)
             
             except Exception as error:
-                self.flash_error_occured = True
+                self.flash_error_occurred = True
                 self.flash_error_message = str(error)
                 logging.error(str(error))
             
@@ -399,7 +399,7 @@ class LokiUpdateController():
         loki_version = ""
         platform = ""
         timestamp = ""
-        error_occured = False
+        error_occurred = False
         error_message = ""
             
         try:
@@ -420,17 +420,17 @@ class LokiUpdateController():
                 file.close()
         
         except FileNotFoundError as error:
-            error_occured = True
+            error_occurred = True
             error_message = "Runtime image details file could not be found"
             logging.error(error_message)
                 
         except Exception as error:
-            error_occured = True
+            error_occurred = True
             error_message = str(error)
             logging.error(error_message)
             
         finally:
-            return name, app_version, loki_version, platform, timestamp, error_occured, error_message
+            return name, app_version, loki_version, platform, timestamp, error_occurred, error_message
 
     def check_for_error(self, process):
         if process.returncode != 0:
