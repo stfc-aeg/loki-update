@@ -152,6 +152,7 @@ class LokiUpdateController():
                 "success": (lambda: self.copy_success, None),
                 "backup_success": (lambda: self.backup_success, None),
                 "restore_success": (lambda: self.restore_success, None)
+                "mmc_synced": (self.get_mmc_synced, None),
             },
             "reboot_board": {
                 "reboot": (None, self.set_reboot),
@@ -168,7 +169,30 @@ class LokiUpdateController():
                 "downloading": (lambda: self.downloading, None),
             }
         })
-    
+
+    def get_mmc_synced(self):
+        """Check if the MMC filesystems have synced, and it is safe to reboot.
+
+        This method returns True if filessystems for eMMC and SD are synchronised.
+        """
+        for mmc_blockdev in [
+            'mmcblk0',
+            'mmcblk1',
+        ]:
+            try:
+                inflight = [int(x) for x in  subprocess.run(["cat",f"/sys/block/{mmc_blockdev}/inflight"], capture_output=True, text=True, check=True).stdout.split(' ') if x != '']
+                inflight_read = inflight[0]
+                inflight_write = inflight[1]
+                if inflight_write:
+                    logging.debug('Block device {} is still syncing: {}'.format(mmc_blockdev, inflight_write))
+                    return False
+            except CalledProcessError as e:
+                logging.error('Error reading mmc sync state for {}: {}'.format(mmc_blockdev, e))
+                # This means the device does not exist, hence we are not worried about sync
+                continue
+
+        return True
+
     def get_server_uptime(self):
         """Get the uptime for the ODIN server.
 
