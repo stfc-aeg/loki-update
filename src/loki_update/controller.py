@@ -343,9 +343,8 @@ class LokiUpdateController():
             timestamp = timestamp_output.stdout.strip()
         
         except subprocess.CalledProcessError as error:
-            self.flash_error_occurred = True
-            self.flash_error_message = str(error.stderr)
-            logging.error("Not flash")
+            error_occurred = True
+            error_message = str(error.stderr)
             logging.error(f"{str(error.cmd)}: {self.flash_error_message}")
         
         except FileNotFoundError as error:
