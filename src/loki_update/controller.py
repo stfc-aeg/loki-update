@@ -151,7 +151,7 @@ class LokiUpdateController():
                 "checksums": (self.get_checksums, self.set_checksums),
                 "success": (lambda: self.copy_success, None),
                 "backup_success": (lambda: self.backup_success, None),
-                "restore_success": (lambda: self.restore_success, None)
+                "restore_success": (lambda: self.restore_success, None),
                 "mmc_synced": (self.get_mmc_synced, None),
             },
             "reboot_board": {
@@ -186,7 +186,7 @@ class LokiUpdateController():
                 if inflight_write:
                     logging.debug('Block device {} is still syncing: {}'.format(mmc_blockdev, inflight_write))
                     return False
-            except CalledProcessError as e:
+            except subprocess.CalledProcessError as e:
                 logging.error('Error reading mmc sync state for {}: {}'.format(mmc_blockdev, e))
                 # This means the device does not exist, hence we are not worried about sync
                 continue

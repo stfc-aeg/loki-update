@@ -1,22 +1,31 @@
 .installed-images-container {
-  margin-top: 1rem;
-  margin-left: 2rem;
-  margin-right: 2rem;
+    margin-top: 1rem;
+    margin-left: 2rem;
+    margin-right: 2rem;
 }
 
 .refresh-all-button {
-  margin-top: 1rem;
+    margin-top: 1rem;
 }
 
 .card-button {
-  margin-left: 1rem;
+    margin-left: 1rem;
 }
 
 .toast {
-  text-align: center;
+    text-align: center;
 }
 
 .reboot-board-button {
-  margin-top: 1rem;
-  margin-left: 1rem;
+    margin-top: 1rem;
+    margin-left: 1rem;
+}
+
+.fs-sync-warning {
+    align-items: center;
+    margin-left: 1rem;
+}
+
+.fs-sync-warning span {
+    margin-left: 0.25rem;
 }
