@@ -97,7 +97,7 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
     const putDevice = async () => {
         await endpoint.put(
             JSON.stringify(device),
-            adapterEndpointURL + "/api/0.1/loki-update/copy_progress/target"
+            adapterEndpointURL + "/copy_progress/target"
         );
     };
 
@@ -118,8 +118,7 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
             setUploadError(false);
 
             await axios.put(
-                adapterEndpointURL +
-                    "/api/0.1/loki-update/copy_progress/checksums",
+                adapterEndpointURL + "/copy_progress/checksums",
                 JSON.stringify(checksums),
                 {
                     headers: {
@@ -130,15 +129,11 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
 
             await putDevice();
 
-            await axios.post(
-                adapterEndpointURL + "/api/0.1/loki-update",
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
-            );
+            await axios.post(adapterEndpointURL, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
 
             setUploadComplete(true);
             setUploading(false);
@@ -162,7 +157,7 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
 
         await axios.put(
             import.meta.env.VITE_ENDPOINT_URL +
-                "/api/0.1/loki-update/github_repos/release_to_retrieve",
+                "/github_repos/release_to_retrieve",
             JSON.stringify(release),
             {
                 headers: {
