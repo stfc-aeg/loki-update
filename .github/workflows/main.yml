@@ -36,7 +36,7 @@ jobs:
 
       - name: Create zip archive
         run: |
-          cd build
+          cd dist
           zip -r build.zip .
       - name: List contents of zip
         run: unzip -l build/build.zip
