@@ -9,14 +9,14 @@ import ImageInfoCard from "./ImageInfoCard";
 import RebootBoardModal from "./RebootBoardModal";
 import FileSyncWarning from "./FileSyncWarning";
 
+const EndpointButton = WithEndpoint(Button);
+
 export default function ImageInfo() {
     const endpoint = useAdapterEndpoint(
         "loki-update",
-        process.env.REACT_APP_ENDPOINT_URL,
+        import.meta.env.VITE_ENDPOINT_URL,
         1000
     );
-
-    const EndpointButton = WithEndpoint(Button);
 
     const installedEmmcImage = endpoint?.data?.installed_images?.emmc;
     const installedSdImage = endpoint?.data?.installed_images?.sd;
@@ -55,6 +55,7 @@ export default function ImageInfo() {
                                         installed_image={installedEmmcImage}
                                         title="Installed Image in eMMC"
                                         device="emmc"
+                                        endpoint={endpoint}
                                     />
                                 </Col>
                                 {checkIdenticalPrimaryImages ? (
@@ -67,6 +68,7 @@ export default function ImageInfo() {
                                             }
                                             title="Installed Image in Runtime"
                                             device="runtime"
+                                            endpoint={endpoint}
                                         />
                                     </Col>
                                 )}
@@ -87,6 +89,7 @@ export default function ImageInfo() {
                                         installed_image={installedFlashImage}
                                         title="Installed Image in Flash (Recovery)"
                                         device="flash"
+                                        endpoint={endpoint}
                                     />
                                 </Col>
                                 <Col>
@@ -94,6 +97,7 @@ export default function ImageInfo() {
                                         installed_image={installedBackupImage}
                                         title="Installed Image in Backup"
                                         device="backup"
+                                        endpoint={endpoint}
                                     />
                                 </Col>
                                 <Col>
@@ -101,6 +105,7 @@ export default function ImageInfo() {
                                         installed_image={installedSdImage}
                                         title="Installed Image in SD"
                                         device="sd"
+                                        endpoint={endpoint}
                                     />
                                 </Col>
                             </Row>
@@ -117,7 +122,7 @@ export default function ImageInfo() {
             >
                 Refresh All
             </EndpointButton>
-            {isRebootAllowed ? <RebootBoardModal /> : <></>}
+            {isRebootAllowed ? <RebootBoardModal endpoint={endpoint} /> : <></>}
         </div>
     );
 }
