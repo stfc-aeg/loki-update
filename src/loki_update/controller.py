@@ -653,15 +653,22 @@ class LokiUpdateController():
         for repo in self.available_repos:
             tags = self.get_release_tags_from_repo(repo.get("owner"), repo.get("name"))
             repo_info.append({"name": repo.get("name"), "tags": tags})
-        
+
+        for repo in self.available_repos:
+            try:
+                tags = self.get_release_tags_from_repo(repo.get("owner"), repo.get("name"))
+                repo_info.append({"name": repo.get("name"), "tags": tags})
+            except Exception as e:
+                logging.error('Failed to get information from repo {}; skipping...'.format(repo.get("name")))
+
         return repo_info
-    
+
     def get_release_tags_from_repo(self, owner, repo):
         release_response = requests.get(f"{GITHUB_REPO_API_URL}/{owner}/{repo}/releases")
-        
+
         tags = []
         assets_required = {"image.ub", "BOOT.BIN", "boot.scr"}
-        
+    
         if release_response.status_code != 200:
             raise LokiUpdateError("Unable to fetch releases from repository")
         
