@@ -694,10 +694,6 @@ class LokiUpdateController():
     
     def get_repo_info(self):
         repo_info = []
-        
-        for repo in self.available_repos:
-            tags = self.get_release_tags_from_repo(repo.get("owner"), repo.get("name"))
-            repo_info.append({"name": repo.get("name"), "tags": tags})
 
         for repo in self.available_repos:
             try:
