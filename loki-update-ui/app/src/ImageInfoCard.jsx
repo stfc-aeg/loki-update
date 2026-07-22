@@ -1,5 +1,5 @@
 import React from "react";
-import { TitleCard, WithEndpoint } from "odin-react";
+import { TitleCard, WithEndpoint } from "@dssg/odin-react";
 import moment from "moment";
 import Button from "react-bootstrap/esm/Button";
 import Spinner from "react-bootstrap/Spinner";

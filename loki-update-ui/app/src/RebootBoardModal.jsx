@@ -4,7 +4,7 @@ import Modal from "react-bootstrap/Modal";
 import ToastContainer from "react-bootstrap/ToastContainer";
 import Toast from "react-bootstrap/Toast";
 import Spinner from "react-bootstrap/Spinner";
-import { WithEndpoint } from "odin-react";
+import { WithEndpoint } from "@dssg/odin-react";
 
 const EndpointButton = WithEndpoint(Button);
 

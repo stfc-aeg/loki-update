@@ -1,5 +1,5 @@
 import React from "react";
-import { useAdapterEndpoint, WithEndpoint } from "odin-react";
+import { useAdapterEndpoint, WithEndpoint } from "@dssg/odin-react";
 import Button from "react-bootstrap/esm/Button";
 import Container from "react-bootstrap/esm/Container";
 import Row from "react-bootstrap/esm/Row";
