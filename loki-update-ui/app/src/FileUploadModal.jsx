@@ -97,7 +97,7 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
     const putDevice = async () => {
         await endpoint.put(
             JSON.stringify(device),
-            adapterEndpointURL + "/copy_progress/target"
+            adapterEndpointURL + "copy_progress/target"
         );
     };
 
@@ -118,7 +118,7 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
             setUploadError(false);
 
             await axios.put(
-                adapterEndpointURL + "/copy_progress/checksums",
+                adapterEndpointURL + "copy_progress/checksums",
                 JSON.stringify(checksums),
                 {
                     headers: {

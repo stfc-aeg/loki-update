@@ -10,10 +10,11 @@ setup(
     packages=find_packages("src"),
     package_dir={"": "src"},
     install_requires=[
-        "odin_control @ git+https://git@github.com/odin-detector/odin-control.git@1.6.0",
+        "odin_control>=2.0.0",
         "tornado>=4.3",
         "future",
-        "pyfdt"    
+        "pyfdt",
+        "requests",
     ],
     python_requires=">=3.7",
 )

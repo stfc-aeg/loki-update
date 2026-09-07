@@ -4,7 +4,7 @@ import Modal from "react-bootstrap/esm/Modal";
 import Toast from "react-bootstrap/Toast";
 import ToastContainer from "react-bootstrap/ToastContainer";
 import ProgressBar from "react-bootstrap/ProgressBar";
-import { WithEndpoint } from "odin-react";
+import { WithEndpoint } from "@dssg/odin-react";
 
 const EndpointButton = WithEndpoint(Button);
 
