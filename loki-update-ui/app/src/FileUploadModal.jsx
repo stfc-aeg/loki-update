@@ -130,7 +130,7 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
             await axios.put(
                 adapterEndpointURL + "/copy_progress",
                 {
-                    "checksums": JSON.stringify(checksums),
+                    "checksums": checksums,
                 },
                 {
                     headers: {
@@ -171,10 +171,9 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
         await putDevice();
 
         await axios.put(
-            import.meta.env.VITE_ENDPOINT_URL +
-            "/github_repos",
+            adapterEndpointURL + "/github_repos",
             {
-                "release_to_retrieve": JSON.stringify(release),
+                "release_to_retrieve": release,
             },
             {
                 headers: {
