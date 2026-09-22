@@ -9,7 +9,7 @@ import axios from "axios";
 import CryptoJS from "crypto-js";
 
 export default function FileUploadModal({ currentImage, device, endpoint }) {
-    const adapterEndpointURL = import.meta.env.VITE_ENDPOINT_URL ?? "";
+    const adapterEndpointURL = (import.meta.env.VITE_ENDPOINT_URL ?? "") + "/api/loki-update";
 
     const isCopying = endpoint?.data?.copy_progress?.copying;
     const progress = endpoint?.data?.copy_progress?.progress;
@@ -96,8 +96,12 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
 
     const putDevice = async () => {
         await endpoint.put(
-            JSON.stringify(device),
-            adapterEndpointURL + "copy_progress/target"
+            JSON.stringify(
+                {
+                    "target": device
+                }
+            ),
+            adapterEndpointURL + "/copy_progress"
         );
     };
 
@@ -117,8 +121,11 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
         try {
             setUploadError(false);
 
+            console.log("adapterEndpointURL:", adapterEndpointURL);
+            console.log("axios baseURL:", axios.defaults.baseURL);
+
             await axios.put(
-                adapterEndpointURL + "copy_progress/checksums",
+                adapterEndpointURL + "/copy_progress/checksums",
                 JSON.stringify(checksums),
                 {
                     headers: {
@@ -153,12 +160,17 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
             tag: tagSelected,
         };
 
+        console.log("adapterEndpointURL:", adapterEndpointURL);
+        console.log("axios baseURL:", axios.defaults.baseURL);
+
         await putDevice();
 
         await axios.put(
             import.meta.env.VITE_ENDPOINT_URL +
-                "/github_repos/release_to_retrieve",
-            JSON.stringify(release),
+            "/github_repos",
+            {
+                "release_to_retrieve": JSON.stringify(release),
+            },
             {
                 headers: {
                     "Content-Type": "application/json",
