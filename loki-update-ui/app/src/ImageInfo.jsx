@@ -1,5 +1,5 @@
 import React from "react";
-import { useAdapterEndpoint, WithEndpoint } from "odin-react";
+import { useAdapterEndpoint, EndpointButton } from "@dssg/odin-react";
 import Button from "react-bootstrap/esm/Button";
 import Container from "react-bootstrap/esm/Container";
 import Row from "react-bootstrap/esm/Row";
@@ -8,8 +8,6 @@ import Accordion from "react-bootstrap/esm/Accordion";
 import ImageInfoCard from "./ImageInfoCard";
 import RebootBoardModal from "./RebootBoardModal";
 import FileSyncWarning from "./FileSyncWarning";
-
-const EndpointButton = WithEndpoint(Button);
 
 export default function ImageInfo() {
     const endpoint = useAdapterEndpoint(

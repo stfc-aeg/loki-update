@@ -4,9 +4,7 @@ import Modal from "react-bootstrap/esm/Modal";
 import Toast from "react-bootstrap/Toast";
 import ToastContainer from "react-bootstrap/ToastContainer";
 import ProgressBar from "react-bootstrap/ProgressBar";
-import { WithEndpoint } from "odin-react";
-
-const EndpointButton = WithEndpoint(Button);
+import { EndpointButton } from "@dssg/odin-react";
 
 export default function BackUpImageModal({ endpoint }) {
     const progress = endpoint?.data?.copy_progress?.progress;

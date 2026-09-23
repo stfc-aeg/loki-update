@@ -1,13 +1,11 @@
 import React from "react";
-import { TitleCard, WithEndpoint } from "odin-react";
+import { TitleCard, EndpointButton} from "@dssg/odin-react";
 import moment from "moment";
 import Button from "react-bootstrap/esm/Button";
 import Spinner from "react-bootstrap/Spinner";
 import FileUploadModal from "./FileUploadModal";
 import BackUpImageModal from "./BackUpImageModal";
 import RestoreImageModal from "./RestoreImageModal";
-
-const EndpointButton = WithEndpoint(Button);
 
 export default function ImageInfoCard({
     installed_image,

@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import "./App.css";
-import { OdinApp } from "odin-react";
+import { OdinApp } from "@dssg/odin-react";
 import ImageInfo from "./ImageInfo";
 
 function App() {

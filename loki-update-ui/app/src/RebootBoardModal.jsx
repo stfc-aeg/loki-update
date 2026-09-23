@@ -4,9 +4,7 @@ import Modal from "react-bootstrap/Modal";
 import ToastContainer from "react-bootstrap/ToastContainer";
 import Toast from "react-bootstrap/Toast";
 import Spinner from "react-bootstrap/Spinner";
-import { WithEndpoint } from "odin-react";
-
-const EndpointButton = WithEndpoint(Button);
+import { EndpointButton } from "@dssg/odin-react";
 
 export default function RebootBoardModal({ endpoint }) {
     const isRebooting = endpoint?.data?.reboot_board?.is_rebooting;
