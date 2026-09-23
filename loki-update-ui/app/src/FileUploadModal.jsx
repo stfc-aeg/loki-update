@@ -110,6 +110,19 @@ export default function FileUploadModal({ currentImage, device, endpoint }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const totalFileSize = files.reduce(
+            (total, file) => total + file.size,
+            0
+        );
+        const maxFileSize = 100 * 1024 * 1024;
+
+        // This is currently a tornado restriction from odin-control.
+        if (totalFileSize > maxFileSize) {
+            window.alert("The combined file size cannot exceed 100 MB.");
+            return;
+        }
+
         handleClose();
         setUploading(true);
 
