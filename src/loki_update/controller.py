@@ -1052,7 +1052,3 @@ class LokiUpdateController:
             self.copy_to_flash(temp_dir, file_name_list)
         else:
             self.copy_all_files(temp_dir, base_path, file_name_list)
-<<<<<<< HEAD
-        
-=======
->>>>>>> main
