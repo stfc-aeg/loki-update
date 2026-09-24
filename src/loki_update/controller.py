@@ -963,8 +963,11 @@ class LokiUpdateController:
         repo_info = []
 
         for repo in self.available_repos:
-            tags = self.get_release_tags_from_repo(repo.get("owner"), repo.get("name"))
-            repo_info.append({"name": repo.get("name"), "tags": tags})
+            try:
+                tags = self.get_release_tags_from_repo(repo.get("owner"), repo.get("name"))
+                repo_info.append({"name": repo.get("name"), "tags": tags})
+            except Exception as e:
+                logging.error('Failed to get information from repo {}; skipping...'.format(repo.get("name")))
 
         return repo_info
 
@@ -1049,3 +1052,7 @@ class LokiUpdateController:
             self.copy_to_flash(temp_dir, file_name_list)
         else:
             self.copy_all_files(temp_dir, base_path, file_name_list)
+<<<<<<< HEAD
+        
+=======
+>>>>>>> main
